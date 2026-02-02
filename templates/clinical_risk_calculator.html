@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Symptom Triage Assessment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* DARK THEME CSS */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000000; /* Deep Black Background */
+            color: #D1D5DB; /* Light Gray Text */
+            /* Ensure body covers the viewport for the absolute background to work */
+            min-height: 100vh;
+            position: relative; /* Context for absolute content */
+        }
+        .form-select {
+            appearance: none;
+            /* SVG arrow color (light gray for visibility on dark select box) */
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3e%3cpath d='M7 7l3-3 3 3m0 6l-3 3-3-3' stroke='%23D1D5DB' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+
+        /* Fixed Header Style for dark theme look */
+        .fixed-header {
+            position: sticky;
+            top: 0;
+            z-index: 20; /* Increased Z-index to be above the content and background */
+            background-color: rgba(0, 0, 0, 0.9); 
+            backdrop-filter: blur(4px); 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #gif-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%; 
+            height: 100%;
+            z-index: -2; 
+            object-fit: cover; 
+            object-position: center; 
+            overflow: hidden; 
+            filter: brightness(0.6) contrast(1.1) grayscale(0.1); 
+        }
+ /* Prevents the image from interfering with mouse events */
+        
+        
+        /* Ensure all main content is positioned above the background */
+        .container {
+            position: relative;
+            z-index: 10;
+        }
+        
+        /* Apply a slight background opacity to the main content panel for better contrast over the GIF */
+        #assessment-container {
+            background-color: rgba(17, 24, 39, 0.95); /* Adjusted: Gray-900 with 95% opacity */
+        }
+    </style>
+</head>
+<body class="antialiased bg-black text-gray-300">
+
+    <!-- GIF Background Element -->
+    <img src="/static/record.gif" id="gif-background" alt="Animated Abstract Background">
+    
+    <div class="container mx-auto p-4 md:p-8 max-w-3xl">
+        
+        <!-- Header Section (Dark Theme Colors) -->
+        <header class="text-center mb-10 fixed-header p-4 -mx-4 -mt-4">
+            <a href="{{ url_for('dashboard') }}" class="text-red-400 hover:text-red-300 text-sm font-medium mb-4 block">&larr; Back to Dashboard</a>
+            <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">Heart Disease Prediction Tool</h1>
+            <p class="text-md text-gray-400 max-w-2xl mx-auto">Provide the following patient data to predict the likelihood of heart disease.</p>
+        </header>
+        
+        <!-- Spacer to push content below the fixed header -->
+        <div class="h-28 sm:h-32"></div>
+
+        <main id="assessment-container" class="p-6 md:p-8 rounded-2xl shadow-2xl border border-gray-700">
+            <!-- Form submits directly to Flask endpoint -->
+            <form id="heart-triage-form" method="POST" action="{{ url_for('heart_disease_prediction') }}">
+                
+                <h2 class="text-2xl font-semibold mb-6 text-red-400 border-b border-gray-700 pb-2">Current Chest Discomfort</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <!-- Age -->
+                    <div>
+                        <label for="age" class="block text-sm font-medium text-gray-300 mb-1">Age</label>
+                        <input type="number" id="age" name="age" class="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-red-400" required placeholder="e.g., 52">
+                    </div>
+
+                    <!-- Sex -->
+                    <div>
+                        <label for="sex" class="block text-sm font-medium text-gray-300 mb-1">Sex</label>
+                        <select id="sex" name="sex" class="form-select w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-red-400" required>
+                            <option value="">Select...</option>
+                            <option value="1">Male</option>
+                            <option value="0">Female</option>
+                        </select>
+                    </div>
+
+                    <!-- Chest Pain Type (cp) -->
+                    <div>
+                        <label for="cp" class="block text-sm font-medium text-gray-300 mb-1">Chest Pain Type</label>
+                        <select id="cp" name="cp" class="form-select w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-red-400" required>
+                            <option value="">Select...</option>
+                            <option value="1">Typical Angina</option>
+                            <option value="2">Atypical Angina</option>
+                            <option value="3">Non-anginal Pain</option>
+                            <option value="4">Asymptomatic</option>
+                        </select>
+                    </div>
+
+                    <!-- Resting Blood Pressure (trestbps) -->
+                    <div>
+                        <label for="trestbps" class="block text-sm font-medium text-gray-300 mb-1">Resting Blood Pressure (mm Hg)</label>
+                        <input type="number" id="trestbps" name="trestbps" class="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-red-400" required placeholder="e.g., 120">
+                    </div>
+
+                    <!-- Serum Cholestoral (chol) -->
+                    <div>
+                        <label for="chol" class="block text-sm font-medium text-gray-300 mb-1">Serum Cholestoral (mg/dl)</label>
+                        <input type="number" id="chol" name="chol" class="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-red-400" required placeholder="e.g., 211">
+                    </div>
+
+                    <!-- Fasting Blood Sugar (fbs) -->
+                    <div>
+                        <label for="fbs" class="block text-sm font-medium text-gray-300 mb-1">Fasting Blood Sugar > 120 mg/dl</label>
+                        <select id="fbs" name="fbs" class="form-select w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-red-400" required>
+                            <option value="">Select...</option>
+                            <option value="1">True</option>
+                            <option value="0">False</option>
+                        </select>
+                    </div>
+
+                    <!-- Resting Electrocardiographic Results (restecg) -->
+                    <div>
+                        <label for="restecg" class="block text-sm font-medium text-gray-300 mb-1">Resting ECG Results</label>
+                        <select id="restecg" name="restecg" class="form-select w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-red-400" required>
+                            <option value="">Select...</option>
+                            <option value="0">Normal</option>
+                            <option value="1">ST-T Wave Abnormality</option>
+                            <option value="2">Probable or Definite Left Ventricular Hypertrophy</option>
+                        </select>
+                    </div>
+
+                    <!-- Maximum Heart Rate Achieved (thalach) -->
+                    <div>
+                        <label for="thalach" class="block text-sm font-medium text-gray-300 mb-1">Maximum Heart Rate Achieved</label>
+                        <input type="number" id="thalach" name="thalach" class="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-red-400" required placeholder="e.g., 142">
+                    </div>
+
+                    <!-- Exercise Induced Angina (exang) -->
+                    <div>
+                        <label for="exang" class="block text-sm font-medium text-gray-300 mb-1">Exercise Induced Angina</label>
+                        <select id="exang" name="exang" class="form-select w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-red-400" required>
+                            <option value="">Select...</option>
+                            <option value="1">Yes</option>
+                            <option value="0">No</option>
+                        </select>
+                    </div>
+
+                    <!-- ST Depression (oldpeak) -->
+                    <div>
+                        <label for="oldpeak" class="block text-sm font-medium text-gray-300 mb-1">ST Depression Induced by Exercise</label>
+                        <input type="number" step="0.1" id="oldpeak" name="oldpeak" class="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-red-400" required placeholder="e.g., 1.6">
+                    </div>
+
+                    <!-- Slope of the peak exercise ST segment (slope) -->
+                    <div>
+                        <label for="slope" class="block text-sm font-medium text-gray-300 mb-1">Slope of Peak Exercise ST Segment</label>
+                        <select id="slope" name="slope" class="form-select w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-red-400" required>
+                            <option value="">Select...</option>
+                            <option value="1">Upsloping</option>
+                            <option value="2">Flat</option>
+                            <option value="3">Downsloping</option>
+                        </select>
+                    </div>
+
+                    <!-- Number of major vessels (ca) -->
+                    <div>
+                        <label for="ca" class="block text-sm font-medium text-gray-300 mb-1">Number of Major Vessels Colored by Flourosopy</label>
+                        <input type="number" id="ca" name="ca" class="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-red-400" required placeholder="0-3">
+                    </div>
+
+                    <!-- Thalassemia (thal) -->
+                    <div class="md:col-span-2">
+                        <label for="thal" class="block text-sm font-medium text-gray-300 mb-1">Thalassemia</label>
+                        <select id="thal" name="thal" class="form-select w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-red-400" required>
+                            <option value="">Select...</option>
+                            <option value="3">Normal</option>
+                            <option value="6">Fixed Defect</option>
+                            <option value="7">Reversable Defect</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mt-8 text-center">
+                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition duration-200 focus:outline-none focus:ring-4 focus:ring-red-500 focus:ring-opacity-50 w-full md:w-auto">
+                        Get Urgent Assessment
+                    </button>
+                </div>
+            </form>
+            <br>
+            
+            <div class="flex justify-center mt-6">
+            <a href="https://www.red.health/" class="bg-red-600 hover:bg-red-700 text-white text-lg font-semibold py-3 px-8 rounded-md shadow-md transition duration-200 ease-in-out inline-block">
+            Call Ambulance
+            </a>
+            </div>
+
+            <!-- Model Performance Section -->
+            {% if metrics %}
+            <section id="metrics-container" class="mt-10">
+                <h3 class="text-2xl font-semibold text-center mb-4 text-white">Model Performance</h3>
+                <div class="bg-gray-800/50 border border-gray-700 rounded-xl p-6 shadow-lg">
+                    <p class="text-sm text-gray-400 mb-4 text-center">These metrics were calculated from testing the model on a standard, public dataset of patients.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                        <div>
+                            <div class="text-4xl font-bold text-green-400">{{ metrics.Accuracy }}</div>
+                            <div class="text-sm text-gray-400 mt-1">Accuracy</div>
+                        </div>
+                        <div>
+                            <div class="text-4xl font-bold text-blue-400">{{ metrics.Precision }}</div>
+                            <div class="text-sm text-gray-400 mt-1">Precision</div>
+                        </div>
+                        <div>
+                            <div class="text-4xl font-bold text-purple-400">{{ metrics.Recall }}</div>
+                            <div class="text-sm text-gray-400 mt-1">Recall (Sensitivity)</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            {% endif %}
+            
+            <section id="results-dashboard" class="mt-12">
+                {% if triage_result_html %}
+                    <!-- Determine color dynamically based on content of the result HTML -->
+                    {% set is_urgent = 'URGENT' in triage_result_html or 'ERROR' in triage_result_html %}
+                    {% set panel_color_class = 'red' if is_urgent else 'green' %}
+
+                    <div id="result-panel" class="p-6 md:p-8 rounded-2xl shadow-xl border border-{{ panel_color_class }}-400 bg-{{ panel_color_class }}-900/30">
+                        <h3 class="text-3xl font-bold text-center mb-6 text-{{ panel_color_class }}-400">Assessment Result</h3>
+                        <div id="prediction-output" class="text-center">
+                            <p class="text-2xl mt-2 text-white">{{ triage_result_html | safe }}</p>
+                            
+                            {% if disclaimer_html %}
+                            <p class="mt-4 text-gray-400 text-sm italic">{{ disclaimer_html | safe }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            </section>
+            
+            <div class="text-center mt-6 text-xl font-bold text-gray-400">Take care of your body. It's the only place you have to live.</div>
+            
+        </main>
+    </div>
+
+    <!-- JavaScript to manage GIF looping -->
+    <script>
+        // --- Existing Code (Star Rendering, GIF Loop) ---
+        const GIF_DURATION_MS = 6000; 
+        const gifElement = document.getElementById('gif-background');
+        // Setting the source to the local static asset path
+        const gifSrc = '/static/record.gif'; 
+
+        const STAR_PATH = 'M9.049 2.927c.3-.921 1.63-.921 1.93 0l2.583 7.942a1 1 0 00.95.691h8.361c.969 0 1.371 1.24.588 1.81l-6.782 4.938a1 1 0 00-.364 1.118l2.583 7.942c.3.921-.755 1.688-1.543 1.118l-6.782-4.938a1 1 0 00-1.176 0l-6.782 4.938c-.788.57-1.843-.197-1.543-1.118l2.583-7.942a1 1 0 00-.364-1.118L2.006 13.37c-.783-.57-.381-1.81.588-1.81h8.361a1 1 0 00.95-.691l2.583-7.942z';
+        const STAR_SVG_TEMPLATE = `<svg class="star-icon" viewBox="0 0 24 24" fill="currentColor"><path d="${STAR_PATH}"></path></svg>`;
+        const FIVE_STARS_HTML = Array(5).fill(STAR_SVG_TEMPLATE).join('');
+
+        function generateStarHTML(rating) {
+            const fillPercentage = (rating / 5.0) * 100;
+            return `
+                <span class="inline-flex items-center">
+                    <span class="rating-container">
+                        <div class="rating-stars-empty">${FIVE_STARS_HTML}</div>
+                        <div class="rating-stars-full-mask" style="width: ${fillPercentage}%;">
+                            <div class="rating-stars-full">
+                                ${FIVE_STARS_HTML}
+                            </div>
+                        </div>
+                    </span>
+                    <span class="rating-text">(${(rating).toFixed(1)}/5)</span>
+                </span>
+            `;
+        }
+
+        function renderAllRatings() {
+            document.querySelectorAll('.data-rating-value').forEach(el => {
+                const rating = parseFloat(el.getAttribute('data-rating'));
+                if (!isNaN(rating)) {
+                    el.innerHTML = generateStarHTML(rating);
+                }
+            });
+        }
+
+        // UPDATED: Function to force the GIF loop using recursion
+        function forceGifLoop() {
+            if (gifElement.src && !gifElement.src.includes('placehold.co')) {
+                // By resetting and restoring the src, we force the browser to restart the GIF animation
+                gifElement.src = '';
+                gifElement.src = gifSrc;
+            }
+            // Recursively call itself after the GIF duration
+            setTimeout(forceGifLoop, GIF_DURATION_MS);
+        }
+        
+    </script>
+</body>
+</html>

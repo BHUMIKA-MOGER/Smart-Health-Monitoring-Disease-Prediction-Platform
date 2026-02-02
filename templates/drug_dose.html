@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Drug Dose Optimization</title>
+    <style>
+        :root{
+            /* --- BLACK AND GREEN THEME --- */
+            --bg: #121212; /* Near black background */
+            --card: #1e272e; /* Dark slate card background */
+            --accent: #34d399; /* Light Green/Mint accent */ 
+            --muted: #9ca3af; /* Muted light gray text */
+            --border: #374151; /* Dark border color */
+            --red: #f87171; /* Light red for error/danger */
+            --orange: #fcd34d; /* Light orange for secondary */
+            --green: #059669; /* Darker green for upload button contrast */
+            --text: #f3f4f6; /* Off-white main text color */
+        }
+        body{
+            font-family: Inter, ui-sans-serif, system-ui, Segoe UI, Roboto, Helvetica, Arial; 
+            background: var(--bg); 
+            color: var(--text); /* Set default text color */
+            margin: 0; 
+            padding: 24px;
+        }
+        .container{
+            max-width: 720px;
+            margin: 0 auto;
+        }
+        .card{
+            background: var(--card);
+            border-radius: 16px; 
+            padding: 24px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); /* Darker shadow */
+            border: 1px solid var(--border);
+        }
+        h1{
+            margin: 0 0 8px;
+            font-size: 24px; 
+            font-weight: 600;
+        }
+        p.lead{
+            margin: 0 0 18px;
+            color: var(--muted);
+            font-size: 15px;
+        }
+        .grid{
+            display: grid;
+            grid-template-columns: 1fr; 
+            gap: 16px; 
+        }
+        .form-group {
+            margin-bottom: 16px; 
+        }
+        label{
+            display: block;
+            font-size: 13px;
+            margin-bottom: 6px;
+            color: var(--text);
+            font-weight: 500;
+        }
+        input[type="text"], input[type="number"], select, textarea{
+            width: 100%;
+            padding: 10px; 
+            border: 1px solid var(--border);
+            border-radius: 12px; 
+            font-size: 14px;
+            box-sizing: border-box; 
+            transition: border-color 0.2s;
+            background: #2d3846; /* Dark input background */
+            color: var(--text);
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            /* Green focus shadow */
+            box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.4); 
+        }
+        button.primary{
+            background: var(--accent);
+            color: #121212; /* Dark text on bright button */
+            padding: 12px 18px; 
+            border: 0;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: background 0.2s;
+        }
+        button.primary:hover {
+            background: #049D6B; /* Darker green hover */
+        }
+        .result-box{
+            margin-top: 20px;
+            padding: 24px;
+            border-radius: 12px;
+            background: #1e272e; /* Same as card background for integration */ 
+            border: 1px solid var(--accent); /* Green border */
+            line-height: 1.5;
+            text-align: center;
+            color: var(--text);
+        }
+        .result-box h2 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            color: var(--accent);
+        }
+        .disclaimer{
+            margin-top: 15px;
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+        .back-link {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: inline-block;
+        }
+        .text-red-700 { color: var(--red); }
+        .text-orange-600 { color: var(--orange); }
+        .text-green-600 { color: var(--green); }
+        .font-bold { font-weight: 700; }
+        .warning-note {
+            font-size: 12px;
+            color: var(--muted);
+            padding-top: 4px;
+        }
+        #gif-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%; 
+            height: 100%;
+            z-index: -2; 
+            object-fit: cover; 
+            object-position: center; 
+            overflow: hidden; 
+            filter: brightness(0.6) contrast(1.1) grayscale(0.1); 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <img src="/static/record.gif" id="gif-background" alt="Animated Abstract Background">
+
+            <a href="{{ url_for('dashboard') }}" class="back-link">&larr; Back to Dashboard</a>
+            <h1>Drug Dose Optimization</h1>
+            <p class="lead">Predict the likelihood of a dose problem (High/Low/Optimal) based on vital signs and reported symptoms.</p>
+
+            <form method="POST">
+                
+                <div class="grid">
+                    
+                    <!-- Age Input (Requested by User) -->
+                    <div class="form-group">
+                        <label for="Age">Patient Age</label>
+                        <input id="Age" name="Age" type="number" placeholder="e.g., 65" min="0" required />
+                        <p class="warning-note">Note: Age is collected but not actively used by the current ML model.</p>
+                    </div>
+
+                    <!-- Daily BP Reading (Input for SBP/DBP extraction) -->
+                    <div class="form-group">
+                        <label for="Daily BP Reading">Daily BP Reading (SBP/DBP)</label>
+                        <input id="Daily BP Reading" name="Daily BP Reading" type="text" placeholder="e.g., 120/80" required />
+                        <p class="warning-note">Must be entered as Systolic/Diastolic (e.g., 120/80).</p>
+                    </div>
+
+                    <!-- Specific Symptom Dropdowns (Requested) -->
+
+                    <div class="form-group">
+                        <label for="Feeling Sleepy More? (CNS Sign)">Feeling Sleepy More? (CNS Sign)</label>
+                        <select id="Feeling Sleepy More? (CNS Sign)" name="Feeling Sleepy More? (CNS Sign)" required>
+                            <option value="" disabled selected>Select...</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="New Severe Headaches?">New Severe Headaches?</label>
+                        <select id="New Severe Headaches?" name="New Severe Headaches?" required>
+                            <option value="" disabled selected>Select...</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Feeling Like Fainting? (Hypotension)">Feeling Like Fainting? (Hypotension)</label>
+                        <select id="Feeling Like Fainting? (Hypotension)" name="Feeling Like Fainting? (Hypotension)" required>
+                            <option value="" disabled selected>Select...</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="New Rapid Weight Gain? (Fluid)">New Rapid Weight Gain? (Fluid)</label>
+                        <select id="New Rapid Weight Gain? (Fluid)" name="New Rapid Weight Gain? (Fluid)" required>
+                            <option value="" disabled selected>Select...</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                        </select>
+                    </div>
+                    
+                </div>
+
+                <div style="margin-top:24px; text-align: center;">
+                    <button type="submit" class="primary">Run Dose Classification</button>
+                </div>
+            </form>
+
+            
+            {% if dose_result_html %}
+            <div class="result-box">
+                <h2>Analysis Result</h2>
+                {{ dose_result_html | safe }}
+                {% if disclaimer_html %}
+                <p class="disclaimer">{{ disclaimer_html }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+
+        </div>
+    </div>
+
+    <script>
+        // --- CHATBOT GLOBAL STATE & CONFIGURATION ---
+        const MODEL_NAME = 'gemini-2.5-flash-preview-05-20';
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent`;
+        const apiKey = "AIzaSyC2RMKxHFAu6wRiw5A3UWG0d2WrpZJU1ro"; 
+
+        let currentStream = null;
+        let photoData = null; 
+        let photoMimeType = null;
+        let isCameraActive = false;
+
+        // --- DOM Elements ---
+        const modal = document.getElementById('chatbot-modal');
+        const videoFeed = document.getElementById('video-feed');
+        const photoPreview = document.getElementById('photo-preview');
+        const canvas = document.getElementById('image-canvas');
+        const placeholder = document.getElementById('video-placeholder');
+        const videoContainer = document.getElementById('video-container');
+
+        const fileInput = document.getElementById('file-input');
+        
+        const startCameraBtn = document.getElementById('start-camera-btn');
+        const uploadFileBtn = document.getElementById('upload-file-btn'); // NEW ELEMENT
+        const capturePhotoBtn = document.getElementById('capture-photo-btn');
+        const clearImageBtn = document.getElementById('clear-image-btn');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        
+        const promptInput = document.getElementById('chat-prompt');
+        const aiResponseBox = document.getElementById('ai-response');
+        const analysisText = document.getElementById('analysis-text');
+
+        // --- UTILITY FUNCTIONS ---
+
+        /** Converts a File object to a Base64 string. */
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        /** Shows an error message in the analysis box. */
+        function displayError(message) {
+            analysisText.innerHTML = `<p style="color: var(--red); font-weight: 700;">Error:</p><p>${message}</p>`;
+            aiResponseBox.style.display = 'block';
+        }
+
+        /** Updates the state of the multimodal UI elements. */
+        function updateUI() {
+            // 1. Image/Video Display State
+            if (isCameraActive) {
+                videoFeed.style.display = 'block';
+                photoPreview.style.display = 'none';
+                placeholder.style.display = 'none';
+                videoContainer.style.cursor = 'default';
+            } else if (photoData) {
+                videoFeed.style.display = 'none';
+                photoPreview.style.display = 'block';
+                placeholder.style.display = 'none';
+                videoContainer.style.cursor = 'default';
+                photoPreview.src = `data:${photoMimeType};base64,${photoData}`;
+            } else {
+                videoFeed.style.display = 'none';
+                photoPreview.style.display = 'none';
+                placeholder.style.display = 'flex';
+                videoContainer.style.cursor = 'pointer';
+            }
+
+            // 2. Button State
+            if (isCameraActive) {
+                // State: Camera is ON
+                startCameraBtn.style.display = 'none';
+                uploadFileBtn.style.display = 'none';
+                capturePhotoBtn.style.display = 'flex';
+                clearImageBtn.style.display = 'none';
+            } else if (photoData) {
+                // State: Photo is LOADED
+                startCameraBtn.style.display = 'none';
+                uploadFileBtn.style.display = 'none';
+                capturePhotoBtn.style.display = 'none';
+                clearImageBtn.style.display = 'flex';
+            } else {
+                // State: Empty/Initial
+                startCameraBtn.style.display = 'flex';
+                uploadFileBtn.style.display = 'flex'; // SHOW UPLOAD BUTTON
+                capturePhotoBtn.style.display = 'none';
+                clearImageBtn.style.display = 'none';
+            }
+
+            analyzeBtn.disabled = !photoData;
+            analyzeBtn.innerHTML = 'Analyze Drug Photo';
+        }
+
+        // --- CAMERA & FILE HANDLERS ---
+        
+        /** Stops the camera stream. */
+        function stopCamera() {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
+                isCameraActive = false;
+                videoFeed.srcObject = null;
+            }
+            if (!photoData) {
+                photoData = null;
+                photoMimeType = null;
+            }
+        }
+
+        /** Starts the environment-facing camera. */
+        async function startCamera() {
+            stopCamera();
+            photoData = null; 
+            aiResponseBox.style.display = 'none';
+            
+            try {
+                const mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                currentStream = mediaStream;
+                videoFeed.srcObject = mediaStream;
+                videoFeed.play();
+                isCameraActive = true;
+                updateUI();
+            } catch (err) {
+                console.error("Error accessing camera:", err);
+                displayError("Could not access camera. Please ensure permissions are granted.");
+                isCameraActive = false;
+                updateUI();
+            }
+        }
+
+        /** Captures an image from the video feed. */
+        function captureImage() {
+            if (!currentStream) return;
+
+            canvas.width = videoFeed.videoWidth;
+            canvas.height = videoFeed.videoHeight;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(videoFeed, 0, 0, canvas.width, canvas.height);
+
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+            photoMimeType = 'image/jpeg';
+            photoData = dataUrl.split(',')[1];
+            
+            stopCamera(); 
+            updateUI();
+        }
+
+        /** Resets all image and analysis states. */
+        function clearImage() {
+            stopCamera();
+            photoData = null;
+            photoMimeType = null;
+            aiResponseBox.style.display = 'none';
+            analysisText.textContent = 'Results will appear here.';
+            updateUI();
+        }
+
+        /** Processes an uploaded or dropped image file. */
+        async function processFile(file) {
+            if (!file || !file.type.startsWith('image/')) {
+                displayError("Please provide a valid image file (JPG, PNG, etc.).");
+                return;
+            }
+            
+            stopCamera();
+            aiResponseBox.style.display = 'none';
+            
+            try {
+                const base64Data = await fileToBase64(file);
+                photoMimeType = file.type;
+                photoData = base64Data;
+                updateUI();
+            } catch (e) {
+                displayError("Error reading file.");
+                console.error("File processing error:", e);
+            }
+        }
+
+        // --- FILE DRAG & DROP / UPLOAD LISTENERS ---
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                processFile(e.target.files[0]);
+            }
+        });
+        
+        // Clicks the hidden file input when the upload button is clicked
+        uploadFileBtn.addEventListener('click', () => {
+             // We must check if camera is active, even though the button shouldn't be visible
+            if (!isCameraActive) {
+                fileInput.click();
+            }
+        });
+
+        // Clicks the hidden file input when placeholder area is clicked (but not if camera is active)
+        videoContainer.addEventListener('click', (e) => {
+            if (!isCameraActive && !photoData) {
+                fileInput.click();
+            }
+        });
+
+        // Drag/Drop handlers
+        videoContainer.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            videoContainer.classList.add('dragging');
+        });
+
+        videoContainer.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            videoContainer.classList.remove('dragging');
+        });
+
+        videoContainer.addEventListener('drop', (e) => {
+            e.preventDefault();
+            videoContainer.classList.remove('dragging');
+            if (e.dataTransfer.files.length > 0) {
+                processFile(e.dataTransfer.files[0]);
+            }
+        });
+
+
+        // --- API CALL FUNCTION ---
+        
+        async function getDrugInfo() {
+            if (!photoData) {
+                displayError("Please capture or upload a photo first.");
+                return;
+            }
+
+            analyzeBtn.disabled = true;
+            analyzeBtn.innerHTML = '<span class="loading-spinner"></span> Analyzing...';
+            aiResponseBox.style.display = 'block';
+            analysisText.textContent = 'Processing image and generating response...';
+            
+            const userPrompt = promptInput.value || "Identify this drug and explain its mechanism of action and common uses.";
+
+            const payload = {
+                contents: [
+                    {
+                        role: "user",
+                        parts: [
+                            { text: userPrompt },
+                            {
+                                inlineData: {
+                                    mimeType: photoMimeType,
+                                    data: photoData
+                                }
+                            }
+                        ]
+                    }
+                ],
+            };
+
+            const maxRetries = 5;
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const fetchUrl = `${API_URL}?key=${apiKey}`;
+                    const apiResponse = await fetch(fetchUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!apiResponse.ok) {
+                        if (apiResponse.status === 429 && i < maxRetries - 1) {
+                            const delay = Math.pow(2, i) * 1000;
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            continue; 
+                        }
+                        throw new Error(`API request failed with status: ${apiResponse.status}`);
+                    }
+
+                    const result = await apiResponse.json();
+                    const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    if (text) {
+                        analysisText.textContent = text;
+                    } else {
+                        displayError("Could not get a text response from the AI. The image may be unclear.");
+                    }
+                    analyzeBtn.disabled = false;
+                    analyzeBtn.innerHTML = 'Analyze Drug Photo';
+                    return; 
+
+                } catch (e) {
+                    console.error("Gemini API error:", e);
+                    if (i === maxRetries - 1) {
+                        displayError(`Failed to connect to AI after ${maxRetries} attempts. ${e.message}`);
+                        analyzeBtn.disabled = false;
+                        analyzeBtn.innerHTML = 'Analyze Drug Photo';
+                    }
+                }
+            }
+        }
+
+        // --- MODAL & BUTTON EVENT LISTENERS ---
+        
+        document.getElementById('chat-icon').addEventListener('click', () => {
+            modal.classList.add('active');
+            updateUI(); // Ensure UI is updated on open
+        });
+
+        document.getElementById('chatbot-close').addEventListener('click', () => {
+            modal.classList.remove('active');
+            stopCamera(); 
+        });
+        
+        // Close modal when clicking outside (on the overlay)
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                document.getElementById('chatbot-close').click();
+            }
+        });
+        
+        // Attach event listeners to the chat buttons
+        startCameraBtn.addEventListener('click', startCamera);
+        capturePhotoBtn.addEventListener('click', captureImage);
+        clearImageBtn.addEventListener('click', clearImage);
+        analyzeBtn.addEventListener('click', getDrugInfo);
+        // uploadFileBtn listener is attached above
+        
+        // Initial UI state setup on load
+        window.onload = updateUI;
+    </script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Portal Login</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Setting the default font family for the dark theme */
+        body { 
+            font-family: 'Inter', sans-serif; 
+        }
+        #gif-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%; 
+            height: 100%;
+            z-index: -2; 
+            object-fit: cover; 
+            object-position: center; 
+            overflow: hidden; 
+            filter: brightness(0.6) contrast(1.1) grayscale(0.1); 
+        }
+        /* Custom input style for dark theme */
+        .dark-input {
+            background-color: #2d3846; /* Dark input field */
+            border-color: #374151; /* Dark border */
+            color: #f3f4f6; /* Light text color */
+        }
+        /* Overriding Tailwind focus for the custom green accent */
+        .focus-green {
+            --tw-ring-color: #34d399; /* Bright Green */
+            border-color: #34d399;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen bg-[#121212] text-gray-100">
+    <img src="/static/record.gif" id="gif-background" alt="Animated Abstract Background" loop>
+
+    <div class="bg-[#1e272e] p-8 rounded-xl shadow-2xl w-full max-w-md border border-[#374151]">
+        <h1 class="text-3xl font-extrabold text-center text-[#34d399] mb-6">Health Portal Access</h1>
+        <p class="text-center text-gray-400 mb-8">Use placeholder: </p>
+        
+        <form method="POST" action="/" class="space-y-6">
+            <div>
+                <label for="username" class="block text-sm font-medium text-gray-300">Username</label>
+                <input type="text" id="username" name="username" required 
+                       class="mt-1 block w-full px-4 py-2 border rounded-lg shadow-sm dark-input 
+                              focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#1e272e] focus-green">
+            </div>
+            
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-300">Password</label>
+                <input type="password" id="password" name="password" required
+                       class="mt-1 block w-full px-4 py-2 border rounded-lg shadow-sm dark-input 
+                              focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#1e272e] focus-green">
+            </div>
+
+            <button type="submit" 
+                    class="w-full py-3 px-4 border border-transparent rounded-lg shadow-lg text-lg font-bold text-[#121212] 
+                           bg-[#34d399] hover:bg-[#049D6B] 
+                           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#34d399] transition duration-150 ease-in-out">
+                Secure Login
+            </button>
+        </form>
+    </div>
+    <script>
+        // --- Existing Code (Star Rendering, GIF Loop) ---
+        const GIF_DURATION_MS = 6000; 
+        const gifElement = document.getElementById('gif-background');
+        // Setting the source to the local static asset path
+        const gifSrc = '/static/record.gif'; 
+
+        const STAR_PATH = 'M9.049 2.927c.3-.921 1.63-.921 1.93 0l2.583 7.942a1 1 0 00.95.691h8.361c.969 0 1.371 1.24.588 1.81l-6.782 4.938a1 1 0 00-.364 1.118l2.583 7.942c.3.921-.755 1.688-1.543 1.118l-6.782-4.938a1 1 0 00-1.176 0l-6.782 4.938c-.788.57-1.843-.197-1.543-1.118l2.583-7.942a1 1 0 00-.364-1.118L2.006 13.37c-.783-.57-.381-1.81.588-1.81h8.361a1 1 0 00.95-.691l2.583-7.942z';
+        const STAR_SVG_TEMPLATE = `<svg class="star-icon" viewBox="0 0 24 24" fill="currentColor"><path d="${STAR_PATH}"></path></svg>`;
+        const FIVE_STARS_HTML = Array(5).fill(STAR_SVG_TEMPLATE).join('');
+
+        function generateStarHTML(rating) {
+            const fillPercentage = (rating / 5.0) * 100;
+            return `
+                <span class="inline-flex items-center">
+                    <span class="rating-container">
+                        <div class="rating-stars-empty">${FIVE_STARS_HTML}</div>
+                        <div class="rating-stars-full-mask" style="width: ${fillPercentage}%;">
+                            <div class="rating-stars-full">
+                                ${FIVE_STARS_HTML}
+                            </div>
+                        </div>
+                    </span>
+                    <span class="rating-text">(${(rating).toFixed(1)}/5)</span>
+                </span>
+            `;
+        }
+
+        function renderAllRatings() {
+            document.querySelectorAll('.data-rating-value').forEach(el => {
+                const rating = parseFloat(el.getAttribute('data-rating'));
+                if (!isNaN(rating)) {
+                    el.innerHTML = generateStarHTML(rating);
+                }
+            });
+        }
+
+        // UPDATED: Function to force the GIF loop using recursion
+        function forceGifLoop() {
+            if (gifElement.src && !gifElement.src.includes('placehold.co')) {
+                // By resetting and restoring the src, we force the browser to restart the GIF animation
+                gifElement.src = '';
+                gifElement.src = gifSrc;
+            }
+            // Recursively call itself after the GIF duration
+            setTimeout(forceGifLoop, GIF_DURATION_MS);
+        }
+
+        // Start the GIF loop
+        forceGifLoop();
+    </script>
+</body>
+</html>

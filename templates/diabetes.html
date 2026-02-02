@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diabetes Risk Assessment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base styles updated for a dark theme */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #13161a; /* Very dark slate background fallback */
+            min-height: 100vh; 
+        }
+        .back-link {
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: inline-block;
+            color: #F87171; /* A soft red/brown equivalent */
+        }
+        /* --- GIF Background Styles --- */
+        #gif-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%; 
+            height: 100%;
+            z-index: -2; 
+            object-fit: cover; 
+            object-position: center; 
+            overflow: hidden; 
+            filter: brightness(0.6) contrast(1.1) grayscale(0.1); 
+        }
+ /* Prevents the image from interfering with mouse events */
+        
+        
+        /* Ensure all main content is positioned above the background */
+        .container {
+            position: relative;
+            z-index: 10;
+        }
+        
+        .symptom-list {
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            background-color: #1f2937; /* Darker blue-gray card background */
+            border: 1px solid #374151; /* Dark border */
+        }
+        .select-input {
+            appearance: none; /* Remove default styling */
+            /* Change dropdown arrow color to light gray (#d1d5db) for visibility */
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3e%3cpath fill='%23d1d5db' d='M10 12L5 7h10l-5 5z'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.5em;
+            padding-right: 2.5rem; /* Make space for the icon */
+        }
+        /* Ensure the input background and text are correct for the dark theme */
+        .select-input-dark {
+            background-color: #374151; /* Input background */
+            color: #d1d5db; /* Input text color */
+            border-color: #4b5563; /* Input border color */
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- BACKGROUND GIF ELEMENT -->
+    <img src="/static/record.gif" id="gif-background" alt="Animated Abstract Background">
+    
+    <!-- Main container now dark and slightly accented, with slight transparency -->
+    <div class="max-w-4xl mx-auto bg-[#1f2937] bg-opacity-90 p-6 sm:p-10 rounded-xl shadow-2xl border border-gray-700 container">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 border-b border-gray-700 pb-4">
+            <a href="#" onclick="history.back(); return false;" class="back-link">&larr; Back to Dashboard</a>
+            <h1 class="text-3xl font-bold text-gray-100 mt-2 sm:mt-0">Diabetes Symptom Assessment</h1>
+        </div>
+        
+        <!-- Paragraph text updated to light color -->
+        <p class="text-gray-300 mb-6">
+            Answer the questions below based on your current or recent experiences. Each "Yes" answer increases your score.
+        </p>
+        
+        <!-- Form structure retained, but modified for JS submission -->
+        <form id="assessment-form">
+            
+            <div class="symptom-list">
+                <div class="grid grid-cols-1 gap-6">
+                    
+                    <!-- 1. Feeling very thirsty often -->
+                    <div class="input-group flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-700 pb-4 last:border-b-0 last:pb-0">
+                        <label class="block text-base text-gray-300 font-medium mb-2 sm:mb-0 w-full sm:w-2/3">1. Feeling very thirsty often</label>
+                        <div class="w-full sm:w-1/3 relative">
+                            <select name="polyuria" required
+                                    class="select-input select-input-dark mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-teal-400 focus:border-teal-400">
+                                <option value="">Select...</option>
+                                <option value="Yes" class="bg-gray-800">Yes</option>
+                                <option value="No" class="bg-gray-800">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 2. Urinating frequently -->
+                    <div class="input-group flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-700 pb-4 last:border-b-0 last:pb-0">
+                        <label class="block text-base text-gray-300 font-medium mb-2 sm:mb-0 w-full sm:w-2/3">2. Urinating frequently</label>
+                        <div class="w-full sm:w-1/3 relative">
+                            <select name="polydipsia" required
+                                    class="select-input select-input-dark mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-teal-400 focus:border-teal-400">
+                                <option value="" class="bg-gray-800">Select...</option>
+                                <option value="Yes" class="bg-gray-800">Yes</option>
+                                <option value="No" class="bg-gray-800">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 3. Always feeling hungry or tired -->
+                    <div class="input-group flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-700 pb-4 last:border-b-0 last:pb-0">
+                        <label class="block text-base text-gray-300 font-medium mb-2 sm:mb-0 w-full sm:w-2/3">3. Always feeling hungry or tired</label>
+                        <div class="w-full sm:w-1/3 relative">
+                            <select name="polyphagia_fatigue" required
+                                    class="select-input select-input-dark mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-teal-400 focus:border-teal-400">
+                                <option value="" class="bg-gray-800">Select...</option>
+                                <option value="Yes" class="bg-gray-800">Yes</option>
+                                <option value="No" class="bg-gray-800">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 4. Having dry mouth or dry skin (Xerostomia/Pruritus) -->
+                    <div class="input-group flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-700 pb-4 last:border-b-0 last:pb-0">
+                        <label class="block text-base text-gray-300 font-medium mb-2 sm:mb-0 w-full sm:w-2/3">4. Having dry mouth or dry skin</label>
+                        <div class="w-full sm:w-1/3 relative">
+                            <select name="skin_issues" required
+                                    class="select-input select-input-dark mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-teal-400 focus:border-teal-400">
+                                <option value="" class="bg-gray-800">Select...</option>
+                                <option value="Yes" class="bg-gray-800">Yes</option>
+                                <option value="No" class="bg-gray-800">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 5. Feels sleepy or slow most of the day (Somnolence/Weakness) -->
+                    <div class="input-group flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-700 pb-4 last:border-b-0 last:pb-0">
+                        <label class="block text-base text-gray-300 font-medium mb-2 sm:mb-0 w-full sm:w-2/3">5. Feels sleepy or slow most of the day</label>
+                        <div class="w-full sm:w-1/3 relative">
+                            <select name="sleepy_slow" required
+                                    class="select-input select-input-dark mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-teal-400 focus:border-teal-400">
+                                <option value="" class="bg-gray-800">Select...</option>
+                                <option value="Yes" class="bg-gray-800">Yes</option>
+                                <option value="No" class="bg-gray-800">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 6. Feeling sudden shakiness or dizziness (Hypoglycemia symptoms) -->
+                    <div class="input-group flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-700 pb-4 last:border-b-0 last:pb-0">
+                        <label class="block text-base text-gray-300 font-medium mb-2 sm:mb-0 w-full sm:w-2/3">6. Feeling sudden shakiness or dizziness</label>
+                        <div class="w-full sm:w-1/3 relative">
+                            <select name="shakiness" required
+                                    class="select-input select-input-dark mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-teal-400 focus:border-teal-400">
+                                <option value="" class="bg-gray-800">Select...</option>
+                                <option value="Yes" class="bg-gray-800">Yes</option>
+                                <option value="No" class="bg-gray-800">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 7. Sweating a lot suddenly (Hypoglycemia symptom) -->
+                    <div class="input-group flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-700 pb-4 last:border-b-0 last:pb-0">
+                        <label class="block text-base text-gray-300 font-medium mb-2 sm:mb-0 w-full sm:w-2/3">7. Sweating a lot suddenly</label>
+                        <div class="w-full sm:w-1/3 relative">
+                            <select name="sweating" required
+                                    class="select-input select-input-dark mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-teal-400 focus:border-teal-400">
+                                <option value="" class="bg-gray-800">Select...</option>
+                                <option value="Yes" class="bg-gray-800">Yes</option>
+                                <option value="No" class="bg-gray-800">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 8. Feels cold or clammy sometimes (Hypoglycemia symptom) -->
+                    <div class="input-group flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-700 pb-4 last:border-b-0 last:pb-0">
+                        <label class="block text-base text-gray-300 font-medium mb-2 sm:mb-0 w-full sm:w-2/3">8. Feels cold or clammy sometimes</label>
+                        <div class="w-full sm:w-1/3 relative">
+                            <select name="cold_clammy" required
+                                    class="select-input select-input-dark mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-teal-400 focus:border-teal-400">
+                                <option value="" class="bg-gray-800">Select...</option>
+                                <option value="Yes" class="bg-gray-800">Yes</option>
+                                <option value="No" class="bg-gray-800">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 9. Fast heartbeat or irritability (Hypoglycemia symptom) -->
+                    <div class="input-group flex flex-col sm:flex-row sm:items-center justify-between pb-4">
+                        <label class="block text-base text-gray-300 font-medium mb-2 sm:mb-0 w-full sm:w-2/3">9. Fast heartbeat or irritability</label>
+                        <div class="w-full sm:w-1/3 relative">
+                            <select name="heartbeat_irritability" required
+                                    class="select-input select-input-dark mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-teal-400 focus:border-teal-400">
+                                <option value="" class="bg-gray-800">Select...</option>
+                                <option value="Yes" class="bg-gray-800">Yes</option>
+                                <option value="No" class="bg-gray-800">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="mt-6">
+                <!-- Button color updated to Teal -->
+                <button type="submit" 
+                        class="w-full py-3 px-4 border border-transparent rounded-lg shadow-lg text-lg font-semibold text-white bg-teal-500 hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-400 transition duration-150 ease-in-out">
+                    Submit & Get Assessment Result
+                </button>
+            </div>
+        </form>
+        
+        <!-- Placeholder for Prediction Result Display (Removed Jinja syntax) -->
+        <div id="result-container" class="mt-8">
+            <!-- JavaScript will inject the result here -->
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('assessment-form');
+            const resultContainer = document.getElementById('result-container');
+            
+            
+            const GIF_DURATION_MS = 5000; 
+            const gifElement = document.getElementById('gif-background');
+            const gifSrc = '/static/record.gif'; 
+
+            // Function to force the GIF loop using recursion
+            function forceGifLoop() {
+                if (gifElement && gifElement.src.includes(gifSrc)) {
+                    gifElement.src = '';
+                    gifElement.src = gifSrc;
+                }
+                setTimeout(forceGifLoop, GIF_DURATION_MS);
+            }
+
+            // Start GIF looping if the element is present
+            if (gifElement) {
+                gifElement.onerror = () => {
+                    gifElement.src = 'https://placehold.co/1920x1080/13161a/20252a?text=Background+Signal+Missing';
+                    gifElement.style.opacity = '0.05';
+                };
+                
+                setTimeout(forceGifLoop, GIF_DURATION_MS);
+            }
+
+            // --- Risk Assessment Function (Max score is 9) ---
+            function getRiskAssessment(score) {
+                let riskLevel = 'Low Risk (Monitor)';
+                let colorClass = 'border-green-400 bg-green-900/20';
+                let message = "Your score suggests a low current risk. Continue to monitor your health, maintain a healthy diet, and get regular exercise. If symptoms appear or worsen, consult a doctor.";
+
+                if (score >= 3 && score <= 5) {
+                    riskLevel = 'Moderate Risk (Consultation Recommended)';
+                    colorClass = 'border-yellow-400 bg-yellow-900/20';
+                    message = "Your score suggests a moderate potential risk based on current symptoms. We highly recommend consulting a healthcare professional for a blood sugar test and lifestyle review soon.";
+                } else if (score >= 6) {
+                    riskLevel = 'High Risk (Immediate Testing)';
+                    colorClass = 'border-red-400 bg-red-900/20';
+                    message = "⚠️ Your score suggests a high potential risk based on current symptoms. Please seek **immediate medical advice and testing** from a doctor to confirm diagnosis and begin management.";
+                }
+
+                return { riskLevel, colorClass, message };
+            }
+
+            // --- Result Rendering Function ---
+            function renderResult(score, assessment) {
+                const htmlContent = `
+                    <div class="p-6 rounded-xl border-4 border-dashed ${assessment.colorClass} text-gray-100 shadow-xl transition duration-300">
+                        <h2 class="text-2xl font-bold mb-3 border-b border-gray-600 pb-2 text-teal-400">Assessment Result:</h2>
+                        
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 p-3 rounded-lg bg-gray-800/50">
+                            <p class="text-xl font-medium">Symptom Score:</p>
+                            <span class="text-3xl font-extrabold text-white">${score} / 9</span>
+                        </div>
+
+                        <div class="mb-4 p-3 rounded-lg border-2 ${assessment.colorClass} bg-gray-900/70">
+                            <p class="text-2xl font-semibold text-gray-300">Risk Level:</p>
+                            <span class="text-3xl font-extrabold text-teal-400 block mt-1">${assessment.riskLevel}</span>
+                        </div>
+                        
+                        <p class="text-base text-gray-300 mt-4 leading-relaxed">${assessment.message}</p>
+
+                        <p class="mt-4 text-gray-400 text-xs italic">
+                            This assessment is for informational screening only and does not constitute a medical diagnosis. Consult a healthcare professional for accurate results.
+                        </p>
+                    </div>
+                `;
+                resultContainer.innerHTML = htmlContent;
+            }
+
+            // --- Form Submission Handler ---
+            form.addEventListener('submit', (e) => {
+                e.preventDefault(); // Stop the default form submission
+
+                let score = 0;
+                let allAnswered = true;
+                const selectElements = form.querySelectorAll('select');
+                
+                // 1. Calculate Score
+                selectElements.forEach(select => {
+                    const value = select.value;
+                    if (value === "") {
+                        allAnswered = false;
+                    }
+                    // Since all questions are Yes/No and Yes = 1 point, we increment the score
+                    if (value === 'Yes') {
+                        score++;
+                    }
+                });
+
+                // 2. Validation Check
+                if (!allAnswered) {
+                     // Using a custom message box instead of alert()
+                     resultContainer.innerHTML = `
+                         <div class="p-4 rounded-lg bg-red-900/20 border border-red-500 text-red-300 mt-4">
+                                <p class="font-semibold">Input Error:</p>
+                                <p>Please answer all 9 questions before submitting the assessment.</p>
+                          </div>
+                     `;
+                     return; 
+                }
+
+                // 3. Get Assessment and Render
+                const assessment = getRiskAssessment(score);
+                renderResult(score, assessment);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart Disease Risk Predictor</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c; /* Dark background */
+        }
+        /* Custom scrollbar for visual appeal */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #2d3748;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4a5568;
+            border-radius: 4px;
+        }
+        /* Style for the small descriptive text */
+        .input-description {
+            font-size: 0.75rem; /* text-xs */
+            color: #9ca3af; /* text-gray-400 */
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 sm:p-8 flex items-start justify-center">
+
+    <div class="w-full max-w-2xl bg-gray-800 p-6 sm:p-10 rounded-xl shadow-2xl border-t-4 border-red-600">
+        
+        <!-- FIX 1: Replaced Jinja syntax with a functional link placeholder -->
+        <a href="{{ url_for('dashboard') }}" class="text-red-400 hover:text-red-300 transition duration-150 inline-block mb-6 font-medium text-sm">
+            &larr; Back to Dashboard
+        </a>
+
+        <h1 class="text-3xl font-bold text-white mb-2 text-center">
+            Cardiac Risk Pre-Assessment
+        </h1>
+        <p class="text-gray-400 mb-8 text-center">
+            **Most data below is found in your standard clinic or lab report.**
+        </p>
+        
+        <!-- Error Message Container (Hidden by default) -->
+        <div id="errorContainer" class="hidden bg-red-800 text-white p-3 rounded-lg mb-6 font-medium">
+            <!-- Error messages will be inserted here -->
+        </div>
+
+        <!-- Input Form - Stacked Vertically (one item per row) -->
+        <form id="predictionForm" class="grid grid-cols-1 gap-6">
+
+            <!-- Age (Single Row) -->
+            <div class="col-span-full">
+                <label for="age" class="block text-sm font-medium text-gray-300">Age (years)</label>
+                <input type="number" id="age" value="50" min="1" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white p-2" required>
+            </div>
+
+            <!-- Sex (Single Row) -->
+            <div class="col-span-full">
+                <label for="sex" class="block text-sm font-medium text-gray-300">Sex</label>
+                <select id="sex" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white p-2" required>
+                    <option value="1">Male</option>
+                    <option value="0">Female</option>
+                </select>
+            </div>
+
+            <!-- Chest Pain Type (cp) - WITH DESCRIPTIONS (Single Row) -->
+            <div class="col-span-full">
+                <label for="cp" class="block text-sm font-medium text-gray-300">Chest Pain Type (cp)</label>
+                <select id="cp" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white p-2" required>
+                    <option value="0">0: Asymptomatic (No pain)</option>
+                    <option value="1">1: Atypical Angina (Pain outside the chest area)</option>
+                    <option value="2">2: Non-Anginal Pain (Non-cardiac related pain)</option>
+                    <option value="3">3: Typical Angina (Definite pain in the chest)</option>
+                </select>
+                <p class="input-description">**User Input:** Select the type of chest pain experienced.</p>
+            </div>
+
+            <!-- Resting BP (Single Row) -->
+            <div class="col-span-full">
+                <label for="trestbps" class="block text-sm font-medium text-gray-300">Resting BP (trestbps) in mm Hg</label>
+                <input type="number" id="trestbps" value="130" min="90" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white p-2" required>
+            </div>
+
+            <!-- Cholesterol (Single Row) -->
+            <div class="col-span-full">
+                <label for="chol" class="block text-sm font-medium text-gray-300">Cholesterol (chol) in mg/dl</label>
+                <input type="number" id="chol" value="240" min="100" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white p-2" required>
+            </div>
+
+            <!-- Fasting Blood Sugar (Single Row) -->
+            <div class="col-span-full">
+                <label for="fbs" class="block text-sm font-medium text-gray-300">Fasting Blood Sugar > 120 mg/dl?</label>
+                <select id="fbs" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white p-2" required>
+                    <option value="0">0: No (&lt; 120 mg/dl)</option>
+                    <option value="1">1: Yes (> 120 mg/dl)</option>
+                </select>
+            </div>
+
+            <!-- Resting ECG (Single Row) -->
+            <div class="col-span-full">
+                <label for="restecg" class="block text-sm font-medium text-gray-300">Resting ECG (restecg)</label>
+                <select id="restecg" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white p-2" required>
+                    <option value="1">1: Normal</option>
+                    <option value="0">0: ST-T wave abnormality</option>
+                    <option value="2">2: Left Ventricular Hypertrophy</option>
+                </select>
+                <p class="input-description">**Clinic Data:** Based on ECG results.</p>
+            </div>
+
+            <!-- Max Heart Rate (Single Row) -->
+            <div class="col-span-full">
+                <label for="thalach" class="block text-sm font-medium text-gray-300">Max Heart Rate (thalach) Achieved</label>
+                <input type="number" id="thalach" value="150" min="70" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white p-2" required>
+                <p class="input-description">**Clinic Data:** Measured during a stress test.</p>
+            </div>
+
+            <!-- Exercise Induced Angina (Single Row) -->
+            <div class="col-span-full">
+                <label for="exang" class="block text-sm font-medium text-gray-300">Exercise Induced Angina?</label>
+                <select id="exang" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white p-2" required>
+                    <option value="0">0: No</option>
+                    <option value="1">1: Yes</option>
+                </select>
+                <p class="input-description">**User Input:** Chest pain experienced during exercise.</p>
+            </div>
+
+            <!-- Oldpeak (Single Row) -->
+            <div class="col-span-full">
+                <label for="oldpeak" class="block text-sm font-medium text-gray-300">Oldpeak (ST Depression)</label>
+                <input type="number" id="oldpeak" value="1.0" step="0.1" min="0.0" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white p-2" required>
+                <p class="input-description">**Clinic Data:** ST depression on the stress ECG.</p>
+            </div>
+
+            <!-- Slope (Single Row) -->
+            <div class="col-span-full">
+                <label for="slope" class="block text-sm font-medium text-gray-300">Slope of Peak Exercise ST</label>
+                <select id="slope" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white p-2" required>
+                    <option value="2">2: Upsloping</option>
+                    <option value="1">1: Flat</option>
+                    <option value="0">0: Downsloping</option>
+                </select>
+                <p class="input-description">**Clinic Data:** ECG interpretation.</p>
+            </div>
+
+            <!-- Num Major Vessels (ca) (Single Row) -->
+            <div class="col-span-full">
+                <label for="ca" class="block text-sm font-medium text-gray-300">Num Major Vessels (ca)</label>
+                <select id="ca" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white p-2" required>
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                </select>
+                <p class="input-description">**Clinic Data:** Number of vessels seen via fluoroscopy.</p>
+            </div>
+
+            <!-- Thalassemia (thal) (Single Row) -->
+            <div class="col-span-full">
+                <label for="thal" class="block text-sm font-medium text-gray-300">Thalassemia (thal)</label>
+                <select id="thal" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white p-2" required>
+                    <option value="2">2: Normal</option>
+                    <option value="1">1: Fixed defect (Non-reversible)</option>
+                    <option value="3">3: Reversible defect (Correctable)</option>
+                </select>
+                <p class="input-description">**Clinic Data:** Blood disorder or defect status.</p>
+            </div>
+            
+            <div class="col-span-full mt-4">
+                <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 shadow-md">
+                    SUBMIT FOR RISK ASSESSMENT
+                </button>
+            </div>
+        </form>
+
+        <!-- Reference Table for Normal Values -->
+        <div class="mt-10 p-4 border border-gray-700 rounded-lg">
+            <h3 class="text-xl font-semibold text-white mb-4 border-b border-gray-700 pb-2">Reference Values (Adults)</h3>
+            <div class="space-y-3">
+                <div class="flex justify-between text-sm text-gray-300">
+                    <span class="font-medium w-1/2">Resting BP (trestbps)</span>
+                    <span class="w-1/2 text-right text-green-400">&lt; 120 / &lt; 80 mm Hg</span>
+                </div>
+                <div class="flex justify-between text-sm text-gray-300">
+                    <span class="font-medium w-1/2">Cholesterol (chol)</span>
+                    <span class="w-1/2 text-right text-green-400">&lt; 200 mg/dl</span>
+                </div>
+                <div class="flex justify-between text-sm text-gray-300">
+                    <span class="font-medium w-1/2">Fasting Blood Sugar (fbs)</span>
+                    <span class="w-1/2 text-right text-green-400">&lt; 100 mg/dl (Normal)</span>
+                </div>
+                <div class="flex justify-between text-sm text-gray-300">
+                    <span class="font-medium w-1/2">Max Heart Rate (thalach)</span>
+                    <span class="w-1/2 text-right text-green-400">Varies by age (Target: 50-85% Max)</span>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">
+                    *Note: These are general guidelines. Consult a physician for personal medical advice.*
+                </p>
+            </div>
+        </div>
+
+        <!-- Prediction Result Display -->
+        <div id="resultContainer" class="mt-10 p-6 rounded-xl text-center transition-all duration-500 hidden">
+            <p class="text-xl font-medium text-gray-200 mb-2">Predicted Risk Level:</p>
+            <h2 id="riskText" class="text-4xl sm:text-5xl font-extrabold mb-4"></h2>
+            <p id="riskRecommendation" class="text-lg font-medium"></p>
+        </div>
+        
+    </div>
+
+    <script>
+        document.getElementById('predictionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // FIX 2: Added robust error handling here
+            try {
+                calculateRisk();
+                document.getElementById('errorContainer').classList.add('hidden');
+            } catch (error) {
+                console.error("Calculation Error:", error);
+                const errorContainer = document.getElementById('errorContainer');
+                errorContainer.textContent = `A calculation error occurred: ${error.message}. Check your inputs.`;
+                errorContainer.classList.remove('hidden');
+                document.getElementById('resultContainer').classList.add('hidden');
+            }
+        });
+
+        // ----------------------------------------------------------------------
+        // Step 1: Logistic Regression Coefficients and Intercept
+        const INTERCEPT = 0.5830; 
+
+        // Coefficients array, matching the order of input features:
+        // ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal']
+        const COEFFICIENTS = [
+            -0.0385, -0.4284, -0.0655, -0.1983, -0.1873, -0.0673, -0.0163, 0.3667, 0.4439, 0.4682, -0.2755, 0.4578, 0.3800
+        ];
+        
+        // ----------------------------------------------------------------------
+        // Step 2: Standard Scaler Parameters
+        const NUMERICAL_FEATURES = ['age', 'trestbps', 'chol', 'thalach', 'oldpeak'];
+        
+        const SCALER_MEANS = {
+            'age': 54.4340, 'trestbps': 131.6117, 'chol': 246.00, 'thalach': 149.1141, 'oldpeak': 1.0715
+        };
+        const SCALER_STDS = {
+            'age': 9.0493, 'trestbps': 17.5167, 'chol': 51.5936, 'thalach': 23.00, 'oldpeak': 1.1751
+        };
+        
+        // ----------------------------------------------------------------------
+
+        function getFeatureValue(id) {
+            const inputElement = document.getElementById(id);
+            if (!inputElement) {
+                // If element ID is misspelled or missing
+                throw new Error(`Input element with ID '${id}' not found.`);
+            }
+            // FIX 3: Robustly parse the input value, defaulting to 0 if invalid or empty
+            const value = parseFloat(inputElement.value);
+            return isNaN(value) ? 0 : value;
+        }
+
+        function scaleFeature(id, value) {
+            // Applies Z-score standardization: (value - mean) / std
+            if (NUMERICAL_FEATURES.includes(id)) {
+                // Check if scaling parameters exist for the feature
+                if (SCALER_MEANS[id] === undefined || SCALER_STDS[id] === undefined || SCALER_STDS[id] === 0) {
+                     // This should not happen with the provided values but adds safety
+                     console.warn(`Scaling parameters missing or zero for ${id}. Returning raw value.`);
+                     return value;
+                }
+                return (value - SCALER_MEANS[id]) / SCALER_STDS[id];
+            }
+            // Categorical features are returned as is
+            return value;
+        }
+
+        function sigmoid(z) {
+            // The final function that converts the linear prediction (z) into a probability (0 to 1)
+            return 1 / (1 + Math.exp(-z));
+        }
+
+        function calculateRisk() {
+            const featureIDs = ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal'];
+            
+            let linearSum = INTERCEPT;
+            
+            // 1. Gather and Scale Inputs
+            for (let i = 0; i < featureIDs.length; i++) {
+                const id = featureIDs[i];
+                let value = getFeatureValue(id);
+                
+                // Scale numerical inputs before using them in the equation
+                const scaledValue = scaleFeature(id, value);
+                
+                // 2. Apply Logistic Regression Formula (Sum of (Coefficient * Feature))
+                linearSum += COEFFICIENTS[i] * scaledValue;
+            }
+
+            // Important: Check for NaN after summation
+            if (isNaN(linearSum)) {
+                throw new Error("Final calculation resulted in an invalid number (NaN).");
+            }
+
+            // 3. Calculate Probability
+            const riskProbability = sigmoid(linearSum);
+            const riskPercentage = (riskProbability * 100).toFixed(1);
+
+            displayResult(riskPercentage);
+        }
+
+        function displayResult(percentage) {
+            const container = document.getElementById('resultContainer');
+            const riskText = document.getElementById('riskText');
+            const recommendation = document.getElementById('riskRecommendation');
+            
+            let colorClass = '';
+            let textOutput = '';
+            let recommendationText = '';
+
+            const p = parseFloat(percentage);
+
+            // Determine Risk Category based on Probability
+            if (p < 35) {
+                // GREEN: Low Risk
+                colorClass = 'bg-green-600 text-white';
+                textOutput = `HEALTHY BODY (${percentage}%)`;
+                recommendationText = 'Risk is minimal. Maintain your current healthy lifestyle.';
+            } else if (p >= 35 && p < 65) {
+                // YELLOW: Moderate Risk
+                colorClass = 'bg-yellow-500 text-gray-900';
+                textOutput = `MODERATE RISK (${percentage}%)`;
+                recommendationText = 'Consult your primary care physician for a preventative check-up.';
+            } else {
+                // RED: High Risk
+                colorClass = 'bg-red-600 text-white';
+                textOutput = `DANGER - IMMEDIATE CONSULT (${percentage}%)`;
+                recommendationText = 'The prediction suggests high risk. Please consult a cardiologist immediately.';
+            }
+
+            // Update DOM elements
+            container.className = `mt-10 p-6 rounded-xl text-center transition-all duration-500 ${colorClass}`;
+            riskText.textContent = textOutput;
+            recommendation.textContent = recommendationText;
+
+            container.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

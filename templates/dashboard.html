@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Prediction Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Define color palette using CSS variables for dark theme consistency */
+        :root {
+            --bg: #000000;
+            --text: #D1D5DB;
+            --accent: #10B981; /* Tailwind Green-500 equivalent */
+            --red: #DC2626; /* Tailwind Red-600 equivalent */
+            --green: #059669; /* Tailwind Green-600 equivalent */
+            --orange: #F97316; /* Tailwind Orange-600 equivalent */
+            --border: rgba(255, 255, 255, 0.1);
+            --muted: #9CA3AF;
+        }
+
+        /* Global Styles and Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg); 
+            overflow-x: hidden; 
+            margin: 0; 
+            padding: 0; 
+            position: relative; 
+        }
+        .doctor-name-link {
+    /* Applying the specified semi-transparent red color */
+            color: #13f399; 
+    
+    /* Remove the default underline */
+            text-decoration: none; 
+        }
+
+        /* --- Custom Star Rating CSS --- */
+        .rating-container {
+            display: inline-block;
+            position: relative;
+            vertical-align: middle;
+            line-height: 1; 
+            padding-top: 2px;
+            padding-bottom: 2px;
+        }
+        .rating-stars-empty, .rating-stars-full { 
+            display: flex;
+            white-space: nowrap;
+        }
+        .rating-stars-empty { color: #E5E7EB; }
+        .rating-stars-full-mask {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            overflow: hidden; 
+            color: #FBBF24; 
+        }
+        .star-icon {
+            width: 0.75rem; 
+            height: 0.75rem; 
+            flex-shrink: 0; 
+            margin-right: 3px; 
+        }
+        .rating-text {
+            font-size: 0.9rem; 
+            font-weight: 500;
+            color: var(--muted); 
+            margin-left: 0.5rem; 
+            line-height: normal; 
+        }
+        
+        /* --- 3D Card/Button Hover Effects --- */
+        .card-perspective { perspective: 1000px; }
+        .card-3d-effect { 
+            transform: translateZ(0); 
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+            transform-style: preserve-3d;
+        }
+        .card-3d-effect:hover { 
+            transform: scale(1.02); 
+            box-shadow: 0 30px 60px -15px rgba(255, 255, 255, 0.1), 0 10px 20px -5px rgba(255, 255, 255, 0.05);
+        }
+        .button-3d-effect:hover { transform: translateY(1px); box-shadow: none; }
+
+        /* --- Background Styling --- */
+        #gif-background {
+            position: fixed; 
+            top: 0;
+            left: 0;
+            width: 100%; 
+            height: 100%;
+            z-index: -2; 
+            object-fit: cover; 
+            object-position: center; 
+            overflow: hidden; 
+            filter: brightness(1.0) contrast(1.1) grayscale(1.1); 
+            opacity: 0.1; 
+            pointer-events: none; 
+        }
+
+        /* --- Fixed Header Styling --- */
+        .fixed-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10; 
+            background-color: rgba(0, 0, 0, 0.8); 
+            backdrop-filter: blur(4px); 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .nav-link {
+            color: #ffffff; 
+            font-size: 0.875rem; 
+            font-weight: 500; 
+            padding: 0.5rem 0.75rem; 
+            border-radius: 0.5rem; 
+            transition: background-color 0.2s; 
+            background-color: transparent; 
+        }
+        .nav-link:hover { background-color: #1f2937; }
+
+        /* --- Foreground Content Styling --- */
+        .main-content { 
+            position: relative;
+            z-index: 1; 
+            padding-top: 8rem; 
+            padding-bottom: 4rem; 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column;
+            align-items: center;
+        }
+        .link-row {
+    /* Optional: Change cursor to indicate clickability */
+            cursor: pointer;
+    /* This establishes a positioning context for the absolute positioned link */
+            position: relative;
+        }
+        /* Table specific styles (Kept for consistency) */
+        .specialist-table { width: 100%; border-collapse: collapse; }
+        .specialist-table th {
+            color: #F87171; font-weight: 600; text-align: left; padding: 0.75rem 1rem;
+            border-bottom: 2px solid rgba(248, 113, 113, 0.3); white-space: nowrap; 
+        }
+        .specialist-table td {
+            padding: 1rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text); font-size: 0.875rem; word-break: break-word; min-width: 100px; 
+        }
+        .specialist-table tr:last-child td { border-bottom: none; }
+        .specialist-row-hidden { display: none; }
+
+        /* Responsive Table adjustments */
+        @media (max-width: 768px) {
+            .specialist-table th, .specialist-table td { padding: 0.5rem 0.75rem; font-size: 0.8rem; }
+            .specialist-table th:nth-child(5), .specialist-table td:nth-child(5) { display: none; }
+        }
+        .specialty-btn.active {
+            background-color: var(--red) !important; 
+            box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.5);
+            transform: translateY(-2px);
+        }
+        
+
+/* Optional: Keep vertical alignment fix from previous steps */
+        tr td {
+            vertical-align: middle;
+        }
+
+        /* --- CHATBOT-SPECIFIC STYLES --- */
+        
+        /* Chat Icon - Placed INLINE in the header */
+        #chat-icon {
+            width: 40px; 
+            height: 40px;
+            background-color: var(--accent); 
+            color: #121212; 
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            z-index: 10; 
+        }
+        #chat-icon:hover {
+            background-color: #049D6B; 
+            transform: scale(1.05);
+        }
+        
+        /* Modal Overlay */
+        #chatbot-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none; 
+            align-items: center;
+            justify-content: center;
+            z-index: 20000;
+            opacity: 0; 
+            transition: opacity 0.3s;
+        }
+        #chatbot-modal.active {
+            display: flex;
+            opacity: 1;
+        }
+        
+        /* Modal Content */
+        #chatbot-content {
+            background: #2d3846; 
+            color: var(--text);
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            width: 95%;
+            max-width: 600px;
+            height: 95%;
+            max-height: 700px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            transform: scale(0.95);
+            transition: transform 0.3s;
+        }
+        #chatbot-modal.active #chatbot-content {
+            transform: scale(1);
+        }
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px;
+        }
+        .modal-header h2 { font-size: 18px; font-weight: 700; color: var(--accent); margin: 0; }
+        #chatbot-close { background: transparent; border: none; font-size: 24px; cursor: pointer; color: var(--muted); line-height: 1; }
+        #chatbot-close:hover { color: var(--red); }
+        
+        /* Form Styling for Chatbot */
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block; color: var(--text); font-weight: 500;
+            margin-bottom: 5px; font-size: 14px;
+        }
+        #chat-prompt {
+            width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border);
+            background: #1e272e; color: var(--text); resize: none; font-size: 14px;
+        }
+
+        /* Main Chat Area / Multimodal App */
+        .chatbot-scroll-area { flex-grow: 1; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; }
+        
+        /* Video/Image Container */
+        .video-container {
+            position: relative; width: 100%; aspect-ratio: 16 / 9; background: #1e272e;
+            border-radius: 12px; overflow: hidden; margin-bottom: 15px; display: flex;
+            flex-direction: column; align-items: center; justify-content: center;
+            border: 2px dashed var(--accent); cursor: pointer;
+        }
+        .video-container.dragging { border-color: var(--green); background-color: #1e272e; }
+        .video-container video, .video-container img { width: 100%; height: 100%; object-fit: cover; }
+        .video-placeholder { text-align: center; color: var(--muted); padding: 20px; pointer-events: none; }
+        
+        /* Buttons */
+        .chat-btn-group { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 15px; margin-bottom: 15px; }
+        .chat-btn {
+            padding: 10px 15px; border: none; border-radius: 10px; cursor: pointer;
+            font-weight: 600; transition: background-color 0.2s; display: flex;
+            align-items: center; gap: 8px;
+        }
+        /* 1. ROW CONTAINER (The clickable area) */
+        .js-clickable-row {
+    /* Indicate to the user that the row is clickable */
+            cursor: pointer; 
+        }
+
+/* Fix vertical alignment for all content */
+        .js-clickable-row td {
+            vertical-align: middle;
+        }
+
+/* Note: There is no .js-clickable-row:hover background-color as requested. */
+/* Row Hover: Block removed as requested */
+/* .clickable-row:hover { background-color: #D1D5DB; } */
+        .chat-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .chat-btn-primary { background: var(--accent); color: #121212; }
+        .chat-btn-primary:hover:not(:disabled) { background: #049D6B; }
+        .chat-btn-green { background: var(--green); color: white; }
+        .chat-btn-green:hover:not(:disabled) { background: #046b4c; }
+        .chat-btn-secondary { background: var(--orange); color: #121212; }
+        .chat-btn-secondary:hover:not(:disabled) { background: #c06904; }
+        .chat-btn-danger { background: var(--red); color: white; }
+        .chat-btn-danger:hover:not(:disabled) { background: #9d1313; }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%; border-top-color: #fff; animation: spin 1s linear infinite;
+        }
+        .analysis-box {
+            margin-top: 15px; padding: 15px; border-radius: 12px; background: #1e272e;
+            border: 1px solid var(--accent); font-size: 14px;
+        }
+        .analysis-box p { white-space: pre-wrap; line-height: 1.5; margin: 0; color: var(--text); }
+        .analysis-box p:first-child { color: var(--accent) !important; }
+        .disclaimer { font-size: 11px; color: var(--muted); text-align: center; margin-top: 15px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="text-white">
+    
+    <!-- Background GIF element -->
+    <img src="/static/record.gif" id="gif-background" alt="Animated Abstract Background">
+
+    <!-- Fixed Header / Navigation Bar -->
+    <header class="fixed-header">
+        <div class="max-w-7xl mx-auto flex justify-between items-center py-4 px-6 w-full">
+            <!-- Title on the far left -->
+            <h1 class="text-2xl font-bold tracking-wider text-white">Health Prediction Portal</h1>
+            
+            <!-- Navigation Links and Logout Button on the far right -->
+            <nav class="flex items-center space-x-4">
+                <a href="{{ url_for('heart_disease_prediction') }}" class="nav-link">Heart Prediction</a>
+                <a href="{{ url_for('diabetes_prediction') }}" class="nav-link">Diabetes</a>
+                <a href="{{ url_for('drug_optimization') }}" class="nav-link">Dose Optimization</a>
+                
+                <!-- Chatbot Icon (NEW) -->
+                <div id="chat-icon" class="ml-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-circle-plus">
+                        <path d="M7.9 20A10 10 0 0 0 20 12V8a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v2a2 2 0 0 1-2 2H4l2 2v2" />
+                        <path d="M12 12h2" />
+                        <path d="M13 11v2" />
+                    </svg>
+                </div>
+
+                <a href="{{ url_for('login') }}" class="text-sm font-medium py-2 px-4 rounded-lg bg-red-600 text-white hover:bg-red-700 transition button-3d-effect">
+                    Logout
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area (Hospital/Specialist Views) -->
+    <div class="max-w-6xl mx-auto main-content w-full px-4 sm:px-6 lg:px-8">
+        
+        <p class="text-4xl font-light text-center text-white mb-4">Welcome, <span class="font-bold text-red-600">Portal User</span>!</p>
+        <p class="text-lg text-center text-gray-300 max-w-4xl mb-16">
+            The Health Prediction Portal is a secure, data-driven application providing immediate risk assessments for Heart Disease and Diabetes, and offering Drug Dose Optimization guidance.
+        </p>
+        
+        <!-- Recommendations Section -->
+        <div id="main-recommendation-area" class="w-full mt-8 p-6 md:p-10 bg-gray-900/90 backdrop-blur-md rounded-xl shadow-2xl card-perspective">
+            
+            <h2 id="main-heading" class="text-3xl font-semibold mb-6 text-white border-b border-red-600/50 pb-2">
+                Top Specialist Hospital Recommendations
+            </h2>
+            
+            <!-- Specialist Navigation Buttons -->
+            <div id="specialist-nav" class="flex flex-wrap justify-center gap-4 mb-8">
+                <button data-specialty="heart" class="specialty-btn px-6 py-2 text-base font-semibold rounded-full bg-gray-700 text-white hover:bg-red-700 transition button-3d-effect">
+                    Heart Specialist 🫀
+                </button>
+                <button data-specialty="diabetes" class="specialty-btn px-6 py-2 text-base font-semibold rounded-full bg-gray-700 text-white hover:bg-red-700 transition button-3d-effect">
+                    Diabetic Specialist 💉
+                </button>
+                <button data-specialty="drug" class="specialty-btn px-6 py-2 text-base font-semibold rounded-full bg-gray-700 text-white hover:bg-red-700 transition button-3d-effect">
+                    Drug Dose Optimization Specialist 💊
+                </button>
+                <button id="back-to-hospitals" class="px-4 py-2 text-sm font-medium rounded-full bg-gray-600 text-white hover:bg-gray-500 transition button-3d-effect" style="display:none;">
+                    ← Back to Hospitals
+                </button>
+            </div>
+            
+            <!-- ---------------------------------------------------- -->
+            <!-- 1. General Hospital View (Visible by default)        -->
+            <!-- ---------------------------------------------------- -->
+            <div id="hospital-view">
+                <!-- HOSPITAL SEARCH BAR -->
+                <div class="mb-6">
+                    <input type="text" id="hospital-search" placeholder="Search hospital name or specialization..."
+                        class="w-full p-3 rounded-lg border border-red-600/50 bg-gray-800 text-white placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition shadow-inner">
+                </div>
+                
+                <!-- Container for all hospital cards -->
+                <div id="hospital-list" class="space-y-4">
+                    
+                    <!-- Hospital 1 -->
+                    <div class="hospital-card p-4 rounded-lg border border-red-600/30 bg-gray-800/90 hover:shadow-red-800/20">
+                        <a href="https://jayadevacardiology.com/" class="text-xl font-bold text-red-400">1. Sri Jayadeva Institute of Cardiovascular Sciences and Research (SJICSR)</a>
+                        <p class="text-sm text-gray-300">
+                            <span class="font-semibold">Location:</span> Jayanagar 9th Block, Outer Ring Road, Bengaluru, Karnataka 560069 <br>
+                            <span class="font-semibold">Rating:</span> <span class="data-rating-value" data-rating="4.5"></span>
+                        </p>
+                        <p class="text-md text-gray-200 mt-1">
+                            Key Focus: Government Institute with a strong specialization in Cardiology. Highly recommended for heart-related analysis.
+                        </p>
+                    </div>
+
+                    <!-- Hospital 2 -->
+                    <div class="hospital-card p-4 rounded-lg border border-gray-700 bg-gray-800/90 hover:shadow-gray-700/20">
+                        <a href="https://www.manipalhospitals.com/campaign/hospitals/bangalore/orthopaedic-specialist/?utm_source=google&utm_medium=ppc&utm_network=search&utm_campaign=Bangalore_MHB_Doctor__Dr2&utm_adgroup=MH_Doctor_Lokesh_Ortho_Hospital&utm_ad=&utm_campaignid=21940001897&keyword=manipal%20hospital%20bangalore&device=c&placement=&gad_source=1&gad_campaignid=21940001897&gbraid=0AAAAACuGmw7psQFfNmLcb4kZo_qslBDYq&gclid=CjwKCAjwmNLHBhA4EiwA3ts3mSj2cAP8BNqS6ME4mgagQSzvU9Oz6kHk4Y4w8m5CYbz-ko6cd6WY7RoCzA8QAvD_BwE" class="text-xl font-bold text-red-400">2. Manipal Hospitals</a>
+                        <p class="text-sm text-gray-300">
+                            <span class="font-semibold">Location:</span> 98, HAL Old Airport Rd, Kodihalli, Bengaluru, Karnataka 560017 <br>
+                            <span class="font-semibold">Rating:</span> <span class="data-rating-value" data-rating="4.1"></span>
+                        </p>
+                        <p class="text-md text-gray-400 mt-1">
+                            Key Focus: Large multi-specialty chain offering comprehensive care across various disciplines.
+                        </p>
+                    </div>
+
+                    <!-- Hospital 3 -->
+                    <div class="hospital-card p-4 rounded-lg border border-gray-700 bg-gray-800/90 hover:shadow-gray-700/20">
+                        <a href="https://www.fortishealthcare.com/lp/cardiologybangalore?utm_source=Google&utm_medium=cpc&utm_campaign=Fortis_Bangalore_Cardiology_and_Cardiac_Surgery&utm_content=Heart_Hospital_Bangalore&utm_term=heart%20hospital%20bangalore&gad_source=1&gad_campaignid=21308054532&gbraid=0AAAAADPWN-4CXXHIWLaB8_mXLTIslUd-W&gclid=CjwKCAjwmNLHBhA4EiwA3ts3mR3AYLiesy-EZXc7J0bkLQ4Qzn3zZ2FFZRKeIupe2_nzlJkFIFbwGxoClKwQAvD_BwE" class="text-xl font-bold text-red-400">3. Fortis Hospital</a>
+                        <p class="text-sm text-gray-300">
+                            <span class="font-semibold">Location:</span> 154/9, Bannerghatta Road, Opposite IIM-B, Bengaluru, Karnataka 560076 <br> 
+                            <span class="font-semibold">Rating:</span> <span class="data-rating-value" data-rating="4.0"></span>
+                        </p>
+                        <p class="text-md text-gray-400 mt-1">
+                            Key Focus: Multi-specialty with established infrastructure and services.
+                        </p>
+                    </div>
+
+                    <!-- Hospitals 4 onwards (Hidden by default) -->
+                    <div class="hospital-card p-4 rounded-lg border border-gray-700 hospital-to-toggle bg-gray-800/90 hover:shadow-gray-700/20">
+                        <a href="https://www.asterhospitals.in/aster-rv-bangalore/robotic-knee-replacement-surgery?gad_source=1&gad_campaignid=22577930553&gbraid=0AAAAAozz8Z0LcJxqxA9z6G9DR3qbgA4Np&gclid=CjwKCAjwmNLHBhA4EiwA3ts3mW8g3NaQSVxeUZ0w0VuwCq7dKgDcoPtIBXd_ueM16kqg1YQVhpxpYBoC864QAvD_BwE" class="text-xl font-bold text-red-400">4. Aster CMI Hospital</a>
+                        <p class="text-sm text-gray-300">
+                            <span class="font-semibold">Location:</span> No. 43/2, New Airport Road, NH 44, Hebbal, Bengaluru, Karnataka 560092<br> 
+                            <span class="font-semibold">Rating:</span> <span class="data-rating-value" data-rating="4.3"></span>
+                        </p>
+                        <p class="text-md text-gray-400 mt-1">
+                            Key Focus: Multi-specialty, often favored for care in North Bangalore.
+                        </p>
+                    </div>
+
+                    <div class="hospital-card p-4 rounded-lg border border-gray-700 hospital-to-toggle bg-gray-800/90 hover:shadow-gray-700/20">
+                        <a href="https://www.sakraworldhospital.com/" class="text-xl font-bold text-red-400">5. Sakra World Hospital</a>
+                        <p class="text-sm text-gray-300">
+                            <span class="font-semibold">Location:</span> Sy. No. 52/2 & 52/3, Devarabeesanahalli, Varthur Hobli, Sarjapur Road, Bengaluru, Karnataka 560103 <br> 
+                            <span class="font-semibold">Rating:</span> <span class="data-rating-value" data-rating="4.2"></span>
+                        </p>
+                        <p class="text-md text-gray-400 mt-1">
+                            Key Focus: Multi-specialty known for its Japanese management influence on quality.
+                        </p>
+                    </div>
+                    
+                    <div class="hospital-card p-4 rounded-lg border border-gray-700 hospital-to-toggle bg-gray-800/90 hover:shadow-gray-700/20">
+                        <a href="https://www.apollohospitals.com/region/bangalore/best-hospital-in-bannerghatta-road/" class="text-xl font-bold text-red-400">6. Apollo Hospitals</a>
+                        <p class="text-sm text-gray-300">
+                            <span class="font-semibold">Location:</span> 19/2, Bannerghatta Road, Madiwala, Bengaluru, Karnataka 560076<br> 
+                            <span class="font-semibold">Rating:</span> <span class="data-rating-value" data-rating="4.0"></span>
+                        </p>
+                        <p class="text-md text-gray-400 mt-1">
+                            Key Focus: Widespread Multi-specialty chain with strong brand recognition.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Show More Button for Hospitals (Centered) -->
+                <div class="mt-6 flex justify-center">
+                    <button id="show-more-button" 
+                            onclick="toggleHospitals()"
+                            class="px-6 py-2 text-sm font-semibold rounded-full bg-red-600 text-white hover:bg-red-700 transition button-3d-effect">
+                        Show More Hospitals
+                    </button>
+                </div>
+            </div>
+
+
+            <!-- ---------------------------------------------------- -->
+            <!-- 2. Heart Specialist View (Table Content)             -->
+            <!-- ---------------------------------------------------- -->
+            <div id="heart-view" class="specialist-list" style="display:none;">
+                <div class="overflow-x-auto rounded-lg border border-gray-700 shadow-xl bg-gray-800/90">
+                    <table class="specialist-table w-full border-collapse" data-list-id="heart-view">
+                        <thead>
+                            <tr>
+                                <th class="w-1/6">Doctor Name</th>
+                                <th class="w-1/6">Specialty</th>
+                                <th class="w-1/4">Qualifications</th>
+                                <th class="w-1/4">Hospital</th>
+                                <th class="w-1/6">Address (Pincode)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td ><a href="https://www.narayanahealth.org/c/bangalore/cardiac-surgery-adult/dr-devi-prasad-shetty"  class="doctor-name-link">Dr. Devi Prasad Shetty</a></td><td>Cardiac Surgeon</td><td>MBBS, MS (Gen Surgery), FRCS (England)</td><td>Narayana Hrudayalaya</td><td>Bommasandra Ind. Area, 560099</td</tr>
+                            <tr> <td><a href="https://www.narayanahealth.org/c/bangalore/cardiac-surgery-adult/dr-devi-prasad-shetty" class="doctor-name-link">Dr. C. N. Manjunath</a></td> <td>Interventional Cardiologist</td> <td>MBBS, MD (Gen. Med.), DM (Cardiology)</td> <td>Sri Jayadeva Institute of C.V. Sciences</td> <td>Bannerghatta Rd, Jayanagar, 560069</td> </tr>
+                            <tr> <td><a href="https://www.fortishealthcare.com/doctors/dr-vivek-jawali-2242" class="doctor-name-link">Dr. Vivek Jawali</a></td> <td>Cardiothoracic Surgeon</td> <td>MBBS, MCh (CTVS)</td> <td>Fortis Hospital</td> <td>154/9, Bannerghatta Road, 560076</td> </tr>
+                            <tr class="specialist-row-hidden"> <td><a href="https://www.practo.com/bangalore/doctor/dr-keshav-r-cardiologist" class="doctor-name-link" >Dr. Keshava R</a></td> <td>Cardiologist & HOD</td> <td>MBBS, MD, DM (Cardiology)</td> <td>Manipal Hospital</td> <td>98, HAL Old Airport Rd, 560017</td> </tr>
+                            <tr class="specialist-row-hidden"> <td><a href="https://www.practo.com/bangalore/doctor/dr-ganeshakrishnan-k-t-iyer-cardiologist" class="doctor-name-link">Dr. Ganesh Krishnan Iyer</a></td> <td>Cardiothoracic Surgeon</td> <td>MBBS, MCh (CTVS)</td> <td>Aster CMI Hospital</td> <td>New Airport Road, Sahakar Nagar, 560092</td> </tr>
+                            <tr class="specialist-row-hidden"> <td><a href="https://www.apollohospitals.com/region/bangalore/doctors/dr-c-m-nagesh/" class="doctor-name-link">Dr. C.M. Nagesh</a></td> <td>Interventional Cardiologist</td> <td>MBBS, MD, DM (Cardiology)</td> <td>Apollo Hospitals</td> <td>154/11, Bannerghatta Road, 560076</td> </tr>
+                            <tr class="specialist-row-hidden"> <td><a href="https://www.manipalhospitals.com/oldairportroad/doctors/dr-devananda-n-s-hod-consultant-cardio-thoracic-vascular-surgery/" class="doctor-name-link">Dr. Devananda N S</a></td> <td>Cardiac Surgeon</td> <td>MBBS, MCh (Cardiac Surgery)</td> <td>Manipal Hospital</td> <td>98, HAL Old Airport Rd, 560017</td> </tr>
+                            <tr class="specialist-row-hidden"> <td><a href="https://www.apollo247.com/doctors/dr-sathyaki-p-nambala-8226218d-1c2d-4616-bcaa-298e747b23ea" class="doctor-name-link">Dr. Sathyaki Purushotham Nambala</a></td> <td>Minimally Invasive Cardiac Surgeon</td> <td>MBBS, MS, MCh (CTVS)</td> <td>Apollo Hospitals</td> <td>154/11, Bannerghatta Road, 560076</td> </tr>
+                            <tr class="specialist-row-hidden"> <td><a href="https://www.asterhospitals.in/doctors/aster-cmi-bangalore/dr-sanjay-bhat" class="doctor-name-link">Dr. Sanjay Bhat</a></td> <td>Interventional Cardiologist</td> <td>MBBS, MD, DM (Cardiology)</td> <td>Aster CMI Hospital</td> <td>New Airport Road, Sahakar Nagar, 560092</td> </tr>
+                            <tr class="specialist-row-hidden"> <td><a href="https://www.apollohospitals.com/doctors/cardiologist/bangalore/dr-ramesh-b" class="doctor-name-link">Dr. B. Ramesh</a></td> <td>Interventional Cardiologist</td> <td>MBBS, MD (Gen Med), DM (Cardiology)</td> <td>Apollo Hospitals</td> <td>154/11, Bannerghatta Road, 560076</td> </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Show More Button for Specialists (Centered) -->
+                <div class="mt-6 flex justify-center">
+                    <button data-table-id="heart-view" class="specialist-show-more-btn px-6 py-2 text-sm font-semibold rounded-full bg-red-600 text-white hover:bg-red-700 transition button-3d-effect">
+                        Show 7 More Specialists
+                    </button>
+                </div>
+            </div>
+
+            <!-- ---------------------------------------------------- -->
+            <!-- 3. Diabetic Specialist View (Table Content)          -->
+            <!-- ---------------------------------------------------- -->
+            <div id="diabetes-view" class="specialist-list" style="display:none;">
+                <div class="overflow-x-auto rounded-lg border border-gray-700 shadow-xl bg-gray-800/90">
+                    <table class="specialist-table w-full border-collapse" data-list-id="diabetes-view">
+                        <thead>
+                            <tr>
+                                <th class="w-1/6">Doctor Name</th>
+                                <th class="w-1/6">Specialty</th>
+                                <th class="w-1/4">Qualifications</th>
+                                <th class="w-1/4">Hospital</th>
+                                <th class="w-1/6">Address (Pincode)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr> <td><a href="https://www.sakraworldhospital.com/doctors/dr-manjunath-malige-endocrinology-diabetes-thyroid-and-osteoporosis"  class="doctor-name-link">Dr. Manjunath Malige</a></td> <td>Endocrinologist & Diabetologist</td> <td>MBBS, MD, MRCP (UK), DM (Endo), FACE</td> <td>Sakra World Hospital</td> <td>Outer Ring Road, Marathahalli, 560103</td> </tr>
+                            <tr> <td><a href="https://www.fortishealthcare.com/doctors/dr-srinivasa-phanidhar-munigoti-2274" class="doctor-name-link">Dr. Srinivasa Phanidhar Munigoti</a></td> <td>Endocrinologist & Diabetologist</td> <td>MBBS, MD (Gen. Med.), CCST (Endo), MRCP (UK)</td> <td>Fortis Hospital</td> <td>154/9, Bannerghatta Road, 560076</td> </tr>
+                            <tr> <td><a href="https://www.asterhospitals.in/doctors/aster-rv-bangalore/dr-s-satish-kumar" class="doctor-name-link">Dr. S. Satish Kumar</a></td> <td>Endocrinologist & Diabetologist</td> <td>MBBS, MRCP (UK), CCST (Endo & Diab)</td> <td>Aster RV Hospital</td> <td>JP Nagar 7th Phase, 560078</td> </tr>
+                            <tr class="specialist-row-hidden"> <td><a href="https://magnacode.co.in/dr-anantharaman-ramakrishnan/" class="doctor-name-link">Dr. Anantharaman Ramakrishnan</a></td> <td>Endocrinologist & Diabetologist</td> <td>MBBS, MD, DM (Endocrinology)</td> <td>Magna Clinic</td> <td>BTM Layout (Check specific address)</td> </tr>
+                            <tr class="specialist-row-hidden"> <td><a href="https://www.apollo247.com/doctors/dr-varun-suryadevara-1034abf5-d6f3-465c-a305-b256bccb62da" class="doctor-name-link">Dr. Varun Suryadevara</a></td><td>Endocrinologist</td> <td>MBBS, MD (Internal Med), DM (Endocrinology)</td> <td>Apollo Sugar Clinics</td> <td>Bannerghatta Road, 560076</td></tr>
+                            <tr class="specialist-row-hidden"> <td><a href="https://www.apollo247.com/doctors/dr-mani-deepthi-dasari-432714ca-ebd8-4bed-9930-ac2a7c508f35"  class="doctor-name-link">Dr. Mani Deepthi Dasari</a></td> <td>Endocrinologist</td> <td>MBBS, MD(Internal med), DM (Endocrinology)</td> <td>Apollo Sugar Clinics</td> <td>Sheshadripuram, 560020</td> </tr>
+                            <tr class="specialist-row-hidden"> <td><a href="https://www.practo.com/bangalore/doctor/dr-hema-venkataraman-endocrinologist" class="doctor-name-link">Dr. Hema Venkataraman</a></td><td>Diabetologist</td> <td>MBBS, Dip. Diabetology</td> <td>Manipal (Highly Recommended)</td> <td>Old Airport Road (Check for consultation)</td> </tr>
+                            <tr class="specialist-row-hidden"> <td><a href="https://www.narayanahealth.org/c/bangalore/general-medicine/dr-aarti-sunil-kamath" class="doctor-name-link">Dr. Aarti Sunil Kamath</a></td> <td>Consultant - General Medicine & Diabetology</td> <td>MBBS, MD (Gen Med), DM (Endocrinology)</td> <td>Narayana Hrudayalaya</td> <td>Bommasandra (Check specific branch)</td> </tr>
+                            <tr class="specialist-row-hidden"> <td><a href="https://www.practo.com/bangalore/doctor/tejas-suresh-rao-general-physician" class="doctor-name-link">Dr. Tejas Suresh Rao</a></td> <td>Diabetologist (Special Interest)</td> <td>MBBS, MD (Gen. Med.), Fellowship in Diabetology</td> <td>Manipal Hospitals</td> <td>Yeshwanthpur, 560022</td> </tr>
+                            <tr class="specialist-row-hidden"> <td><a href="https://www.practo.com/bangalore/doctor/basavaraj-gs-endocrinologist" class="doctor-name-link">Dr. Basavaraj GS</a></td> <td>Diabetologist</td> <td>(MBBS, Dip Diab is typical)</td> <td>Shashi Advanced Health</td> <td>HSR Layout, 560102</td> </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Show More Button for Specialists (Centered) -->
+                <div class="mt-6 flex justify-center">
+                    <button data-table-id="diabetes-view" class="specialist-show-more-btn px-6 py-2 text-sm font-semibold rounded-full bg-red-600 text-white hover:bg-red-700 transition button-3d-effect">
+                        Show 7 More Specialists
+                    </button>
+                </div>
+            </div>
+
+            <!-- ---------------------------------------------------- -->
+            <!-- 4. Drug Dose Optimization Specialist View (Table Content) -->
+            <!-- ---------------------------------------------------- -->
+            <div id="drug-view" class="specialist-list" style="display:none;">
+                <div class="overflow-x-auto rounded-lg border border-gray-700 shadow-xl bg-gray-800/90">
+                    <table class="specialist-table w-full border-collapse" data-list-id="drug-view">
+                        <thead>
+                            <tr>
+                                <th class="w-1/6">Doctor Name / Type</th>
+                                <th class="w-1/6">Specialty</th>
+                                <th class="w-1/4">Qualifications</th>
+                                <th class="w-1/4">Hospital</th>
+                                <th class="w-1/6">Address (Pincode)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr> <td><a href="https://www.apollo247.com/doctors/dr-gokul-nath-d1fa723a-da8a-4eaf-85cd-928a27613b9a" class="doctor-name-link">Dr. Gokul Nath</a></td> <td>Nephrologist (Drug Dose Expert)</td> <td>MBBS, MD (Gen. Med.), DM (Nephrology)</td> <td>Apollo Hospitals</td> <td>154/11, Bannerghatta Road, 560076</td> </tr>
+                            <tr> <td><a href="https://www.practo.com/bangalore/doctor/dr-tharangini-s-r-general-physician" class="doctor-name-link">Dr. Tharangini S R</a></td> <td>Clinical Pharmacologist</td> <td>(MD in Pharmacology is typical)</td> <td>Dev Health Care & Diagnostics</td> <td>Kasavanahalli, 560035</td> </tr>
+                            <tr> <td><a href="https://www.manipalhospitals.com/whitefield/doctors/dr-shashank-s-dhareshwar-nephrologist/" class="doctor-name-link">Dr. Shashank S Dhareshwar</a></td> <td>Consultant – Nephrology</td> <td>MBBS | DNB(Medicine) | DNB(Nephrology) | PGDMLE</td> <td>Manipal Hospital</td> <td>98, HAL Old Airport Rd, 560017</td> </tr>
+                            <tr class="specialist-row-hidden"> <td><a href="https://www.justdial.com/Bangalore/Dr-Umesh-Lingaraj-Bangalore-Gpo/080PXX80-XX80-140606155722-W2Q2_BZDET" class="doctor-name-link">Dr. Umesh L</a> </td> <td>Nephrologist</td> <td>MBBS, MD, DM (Nephrology)</td> <td>Fortis Hospital</td> <td>154/9, Bannerghatta Road, 560076</td> </tr>
+                            <tr class="specialist-row-hidden"> <td><a href="https://www.practo.com/bangalore/doctor/dr-ambrish-c-endocrinologist" class="doctor-name-link">Dr. Ambrish C.</a></td> <td>Clinical Pharmacologist</td> <td>(MD in Pharmacology is typical)</td> <td>Regal Hospital</td> <td>Hegde Nagar, 560077</td> </tr>
+                            <tr class="specialist-row-hidden"> <td><a href="https://www.practo.com/bangalore/doctor/bhaskar-r-family-physician" class="doctor-name-link">Dr. Bhaskar R</a></td> <td>Clinical Pharmacologist</td> <td>(MD in Pharmacology is typical)</td> <td>Dr Bhaskar's Clinic</td> <td>Uttarahalli, 560061</td> </tr>
+                            <tr class="specialist-row-hidden"> <td><a href="https://www.practo.com/bangalore/doctor/sujatha-sowmyanarayan-general-physician" class="doctor-name-link">  Dr. Sujatha Sowmyanarayan</a></td> <td>Clinical Pharmacologist</td> <td>(MD in Pharmacology is typical)</td> <td>Sri Krishna Clinic</td> <td>Marathahalli, 560037</td> </tr>
+                            <tr class="specialist-row-hidden"> <td><a href="https://www.practo.com/bangalore/doctor/alben-general-physician?practice_id=1293351&specialization=Clinical%20Pharmacologist&referrer=doctor_listing&page_uid=ad50fc3d-d2e8-4d41-99ec-b4ae22659d5c" class="doctor-name-link"> Dr. Alben</a></td> <td>Clinical Pharmacologist</td> <td>(MD in Pharmacology is typical)</td> <td>Vilayil Clinic</td> <td>Jigani, 560105</td> </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Show More Button for Specialists (Centered) -->
+                <div class="mt-6 flex justify-center">
+                    <button data-table-id="drug-view" class="specialist-show-more-btn px-6 py-2 text-sm font-semibold rounded-full bg-red-600 text-white hover:bg-red-700 transition button-3d-effect">
+                        Show 7 More Specialists
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <!-- --- MULTIMODAL CHATBOT MODAL (NEW) --- -->
+    <div id="chatbot-modal">
+        <div id="chatbot-content">
+            <div class="modal-header">
+                <h2>💊 Multimodal Drug Analysis AI</h2>
+                <button id="chatbot-close">
+                    &times;
+                </button>
+            </div>
+
+            <div class="chatbot-scroll-area">
+                <div class="form-group">
+                    <label for="chat-prompt">Instructions for the AI (e.g., "Identify this pill and its side effects.")</label>
+                    <textarea id="chat-prompt" rows="3" class="focus:ring-red-500 focus:border-red-500">Identify this drug and explain its mechanism of action and common uses.</textarea>
+                </div>
+
+                <div id="image-upload-area" class="form-group">
+                    <label>Image Input (Pill, Bottle, or Lab Report)</label>
+                    <div id="video-container" class="video-container">
+                        <video id="video-feed" style="display: none;" playsinline autoplay muted></video>
+                        <img id="photo-preview" style="display: none; object-fit: contain;" alt="Captured Drug Image" />
+                        
+                        <div id="video-placeholder" class="video-placeholder">
+                            <p style="font-size: 16px; font-weight: 500;">Click/Drag & Drop Image Here to Upload</p>
+                            <p style="font-size: 13px;">or use the Camera button below.</p>
+                            <input type="file" id="file-input" accept="image/*" style="display: none;">
+                        </div>
+                        <canvas id="image-canvas" style="display: none;"></canvas>
+                    </div>
+                </div>
+
+                <div id="chat-btn-group" class="chat-btn-group">
+                    
+                    <button id="start-camera-btn" class="chat-btn chat-btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3L14.5 4z"/><circle cx="12" cy="13" r="3"/></svg>
+                        Start Camera
+                    </button>
+
+                    <button id="upload-file-btn" class="chat-btn chat-btn-green">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                        Upload File
+                    </button>
+
+                    <button id="capture-photo-btn" class="chat-btn chat-btn-primary" style="display:none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3L14.5 4z"/><circle cx="12" cy="13" r="3"/></svg>
+                        Capture Photo
+                    </button>
+                    
+                    <button id="clear-image-btn" class="chat-btn chat-btn-secondary" style="display:none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4h4"/><path d="M21 14v-4h-4"/><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.76 2.87l1.4 1.4"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.76-2.87l-1.4 1.4"/></svg>
+                        Clear Image
+                    </button>
+                </div>
+
+                <div class="form-group">
+                    <button id="analyze-btn" class="chat-btn chat-btn-danger" style="width: 100%;" disabled>
+                        Analyze Drug Photo
+                    </button>
+                </div>
+
+                <div id="ai-response" class="analysis-box" style="display: none;">
+                    <p style="font-weight: 600; margin-bottom: 5px; color: var(--accent);">AI Analysis:</p>
+                    <p id="analysis-text">Results will appear here.</p>
+                </div>
+
+                <p class="disclaimer">
+                    Disclaimer: This tool provides general information based on AI modeling. It is not a substitute for professional medical advice. Always consult a healthcare provider for questions about medication.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Existing Hospital/Star Logic ---
+        const GIF_DURATION_MS = 6000; 
+        const gifElement = document.getElementById('gif-background');
+        const gifSrc = '/static/record.gif'; 
+
+        const STAR_PATH = 'M9.049 2.927c.3-.921 1.63-.921 1.93 0l2.583 7.942a1 1 0 00.95.691h8.361c.969 0 1.371 1.24.588 1.81l-6.782 4.938a1 1 0 00-.364 1.118l2.583 7.942c.3.921-.755 1.688-1.543 1.118l-6.782-4.938a1 1 0 00-1.176 0l-6.782 4.938c-.788.57-1.843-.197-1.543-1.118l2.583-7.942a1 1 0 00-.364-1.118L2.006 13.37c-.783-.57-.381-1.81.588-1.81h8.361a1 1 0 00.95-.691l2.583-7.942z';
+        const STAR_SVG_TEMPLATE = `<svg class="star-icon" viewBox="0 0 24 24" fill="currentColor"><path d="${STAR_PATH}"></path></svg>`;
+        const FIVE_STARS_HTML = Array(5).fill(STAR_SVG_TEMPLATE).join('');
+
+        function generateStarHTML(rating) {
+            const fillPercentage = (rating / 5.0) * 100;
+            return `
+                <span class="inline-flex items-center">
+                    <span class="rating-container">
+                        <div class="rating-stars-empty">${FIVE_STARS_HTML}</div>
+                        <div class="rating-stars-full-mask" style="width: ${fillPercentage}%;">
+                            <div class="rating-stars-full">
+                                ${FIVE_STARS_HTML}
+                            </div>
+                        </div>
+                    </span>
+                    <span class="rating-text">(${(rating).toFixed(1)}/5)</span>
+                </span>
+            `;
+        }
+
+        function renderAllRatings() {
+            document.querySelectorAll('.data-rating-value').forEach(el => {
+                const rating = parseFloat(el.getAttribute('data-rating'));
+                if (!isNaN(rating)) {
+                    el.innerHTML = generateStarHTML(rating);
+                }
+            });
+        }
+
+        function forceGifLoop() {
+            if (gifElement.src && !gifElement.src.includes('placehold.co')) {
+                gifElement.src = '';
+                gifElement.src = gifSrc;
+            }
+            setTimeout(forceGifLoop, GIF_DURATION_MS);
+        }
+        
+        const hospitalView = document.getElementById('hospital-view');
+        const heartView = document.getElementById('heart-view');
+        const diabetesView = document.getElementById('diabetes-view');
+        const drugView = document.getElementById('drug-view');
+        const specialistButtons = document.querySelectorAll('.specialty-btn');
+        const backButton = document.getElementById('back-to-hospitals');
+        const mainHeading = document.getElementById('main-heading');
+        const specialistShowMoreButtons = document.querySelectorAll('.specialist-show-more-btn');
+
+        function toggleSpecialistRows(tableId) {
+            const listContainer = document.getElementById(tableId);
+            if (!listContainer) return;
+            const hiddenRows = listContainer.querySelectorAll('.specialist-row-hidden');
+            const button = listContainer.querySelector('.specialist-show-more-btn');
+            if (!hiddenRows.length || !button) return;
+
+            const isHidden = hiddenRows[0].style.display === 'none';
+
+            hiddenRows.forEach(row => { row.style.display = isHidden ? 'table-row' : 'none'; });
+
+            if (isHidden) {
+                button.textContent = 'Show Less Specialists';
+            } else {
+                const totalRows = listContainer.querySelectorAll('.specialist-table tbody tr').length;
+                button.textContent = `Show ${totalRows - 3} More Specialists`;
+            }
+        }
+
+        function resetHospitalView() {
+            const hospitalCards = document.querySelectorAll('#hospital-list > div');
+            const showMoreButton = document.getElementById('show-more-button');
+            
+            hospitalCards.forEach((card, index) => {
+                card.style.display = index < 3 ? 'block' : 'none';
+            });
+
+            showMoreButton.style.display = 'block';
+            showMoreButton.textContent = 'Show More Hospitals';
+            document.getElementById('hospital-search').value = ''; 
+        }
+
+        function toggleHospitals() {
+            const hospitalsToToggle = document.querySelectorAll('.hospital-to-toggle'); 
+            const button = document.getElementById('show-more-button');
+            
+            let isExpanded = hospitalsToToggle.length > 0 && hospitalsToToggle[0].style.display === 'block';
+
+            if (isExpanded) {
+                hospitalsToToggle.forEach(hospital => { hospital.style.display = 'none'; });
+                button.textContent = 'Show More Hospitals';
+            } else {
+                hospitalsToToggle.forEach(hospital => { hospital.style.display = 'block'; });
+                button.textContent = 'Show Less';
+            }
+        }
+
+        function filterHospitals() {
+            const filterText = document.getElementById('hospital-search').value.toLowerCase().trim();
+            const hospitalCards = document.querySelectorAll('#hospital-list > div');
+            const showMoreButton = document.getElementById('show-more-button');
+
+            if (filterText.length === 0) {
+                resetHospitalView(); 
+                return;
+            }
+
+            showMoreButton.style.display = 'none';
+
+            hospitalCards.forEach(card => {
+                const cardText = card.textContent.toLowerCase();
+                card.style.display = cardText.includes(filterText) ? 'block' : 'none';
+            });
+        }
+
+        function showSpecialistList(specialty) {
+            hospitalView.style.display = 'none';
+
+            document.querySelectorAll('.specialist-list').forEach(list => { list.style.display = 'none'; });
+
+            let newHeading = "";
+            let newView = null;
+            
+            if (specialty === 'heart') {
+                newView = heartView;
+                newHeading = "Top Heart Specialists in Bengaluru 🫀";
+            } else if (specialty === 'diabetes') {
+                newView = diabetesView;
+                newHeading = "Top Diabetic Specialists in Bengaluru 💉";
+            } else if (specialty === 'drug') {
+                newView = drugView;
+                newHeading = "Top Drug Dose Optimization Specialists in Bengaluru 💊";
+            }
+
+            if (newView) {
+                newView.style.display = 'block';
+                mainHeading.textContent = newHeading;
+            }
+
+            specialistButtons.forEach(btn => {
+                btn.classList.remove('active', 'bg-red-600');
+                btn.classList.add('bg-gray-700');
+                if (btn.getAttribute('data-specialty') === specialty) {
+                    btn.classList.add('active', 'bg-red-600'); 
+                }
+            });
+
+            backButton.style.display = 'inline-block';
+        }
+
+        function showHospitalView() {
+            hospitalView.style.display = 'block';
+            document.querySelectorAll('.specialist-list').forEach(list => { list.style.display = 'none'; });
+            mainHeading.textContent = "Top Specialist Hospital Recommendations";
+            specialistButtons.forEach(btn => {
+                btn.classList.remove('active', 'bg-red-600');
+                btn.classList.add('bg-gray-700');
+            });
+            backButton.style.display = 'none';
+            resetHospitalView(); 
+        }
+
+        // --- CHATBOT GLOBAL STATE & CONFIGURATION ---
+        // NOTE: API Key must be set to an empty string. The environment will handle key injection.
+        const MODEL_NAME = 'gemini-2.5-flash-preview-05-20';
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent`;
+        const apiKey = "AIzaSyC2RMKxHFAu6wRiw5A3UWG0d2WrpZJU1ro"; 
+
+        let currentStream = null;
+        let photoData = null; 
+        let photoMimeType = null;
+        let isCameraActive = false;
+
+        // --- DOM Elements ---
+        const modal = document.getElementById('chatbot-modal');
+        const videoFeed = document.getElementById('video-feed');
+        const photoPreview = document.getElementById('photo-preview');
+        const canvas = document.getElementById('image-canvas');
+        const placeholder = document.getElementById('video-placeholder');
+        const videoContainer = document.getElementById('video-container');
+
+        const fileInput = document.getElementById('file-input');
+        
+        const startCameraBtn = document.getElementById('start-camera-btn');
+        const uploadFileBtn = document.getElementById('upload-file-btn');
+        const capturePhotoBtn = document.getElementById('capture-photo-btn');
+        const clearImageBtn = document.getElementById('clear-image-btn');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        
+        const promptInput = document.getElementById('chat-prompt');
+        const aiResponseBox = document.getElementById('ai-response');
+        const analysisText = document.getElementById('analysis-text');
+
+        // --- UTILITY FUNCTIONS ---
+
+        /** Converts a File object to a Base64 string. */
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        /** Shows an error message in the analysis box. */
+        function displayError(message) {
+            analysisText.innerHTML = `<p style="color: var(--red); font-weight: 700;">Error:</p><p>${message}</p>`;
+            aiResponseBox.style.display = 'block';
+        }
+
+        /** Updates the state of the multimodal UI elements. */
+        function updateUI() {
+            // 1. Image/Video Display State
+            if (isCameraActive) {
+                videoFeed.style.display = 'block';
+                photoPreview.style.display = 'none';
+                placeholder.style.display = 'none';
+                videoContainer.style.cursor = 'default';
+            } else if (photoData) {
+                videoFeed.style.display = 'none';
+                photoPreview.style.display = 'block';
+                placeholder.style.display = 'none';
+                videoContainer.style.cursor = 'default';
+                photoPreview.src = `data:${photoMimeType};base64,${photoData}`;
+            } else {
+                videoFeed.style.display = 'none';
+                photoPreview.style.display = 'none';
+                placeholder.style.display = 'flex';
+                videoContainer.style.cursor = 'pointer';
+            }
+
+            // 2. Button State
+            if (isCameraActive) {
+                startCameraBtn.style.display = 'none';
+                uploadFileBtn.style.display = 'none';
+                capturePhotoBtn.style.display = 'flex';
+                clearImageBtn.style.display = 'none';
+            } else if (photoData) {
+                startCameraBtn.style.display = 'none';
+                uploadFileBtn.style.display = 'none';
+                capturePhotoBtn.style.display = 'none';
+                clearImageBtn.style.display = 'flex';
+            } else {
+                startCameraBtn.style.display = 'flex';
+                uploadFileBtn.style.display = 'flex';
+                capturePhotoBtn.style.display = 'none';
+                clearImageBtn.style.display = 'none';
+            }
+
+            analyzeBtn.disabled = !photoData;
+            analyzeBtn.innerHTML = 'Analyze Drug Photo';
+        }
+
+        // --- CAMERA & FILE HANDLERS ---
+        
+        /** Stops the camera stream. */
+        function stopCamera() {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
+                isCameraActive = false;
+                videoFeed.srcObject = null;
+            }
+            if (!photoData) {
+                photoData = null;
+                photoMimeType = null;
+            }
+        }
+
+        /** Starts the environment-facing camera. */
+        async function startCamera() {
+            stopCamera();
+            photoData = null; 
+            aiResponseBox.style.display = 'none';
+            
+            try {
+                const mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                currentStream = mediaStream;
+                videoFeed.srcObject = mediaStream;
+                videoFeed.play();
+                isCameraActive = true;
+                updateUI();
+            } catch (err) {
+                console.error("Error accessing camera:", err);
+                displayError("Could not access camera. Please ensure permissions are granted.");
+                isCameraActive = false;
+                updateUI();
+            }
+        }
+
+        /** Captures an image from the video feed. */
+        function captureImage() {
+            if (!currentStream) return;
+
+            canvas.width = videoFeed.videoWidth;
+            canvas.height = videoFeed.videoHeight;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(videoFeed, 0, 0, canvas.width, canvas.height);
+
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+            photoMimeType = 'image/jpeg';
+            photoData = dataUrl.split(',')[1];
+            
+            stopCamera(); 
+            updateUI();
+        }
+
+        /** Resets all image and analysis states. */
+        function clearImage() {
+            stopCamera();
+            photoData = null;
+            photoMimeType = null;
+            aiResponseBox.style.display = 'none';
+            analysisText.textContent = 'Results will appear here.';
+            updateUI();
+        }
+
+        /** Processes an uploaded or dropped image file. */
+        async function processFile(file) {
+            if (!file || !file.type.startsWith('image/')) {
+                displayError("Please provide a valid image file (JPG, PNG, etc.).");
+                return;
+            }
+            
+            stopCamera();
+            aiResponseBox.style.display = 'none';
+            
+            try {
+                const base64Data = await fileToBase64(file);
+                photoMimeType = file.type;
+                photoData = base64Data;
+                updateUI();
+            } catch (e) {
+                displayError("Error reading file.");
+                console.error("File processing error:", e);
+            }
+        }
+
+        // --- FILE DRAG & DROP / UPLOAD LISTENERS ---
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                processFile(e.target.files[0]);
+            }
+        });
+        
+        uploadFileBtn.addEventListener('click', () => {
+            if (!isCameraActive) {
+                fileInput.click();
+            }
+        });
+
+        videoContainer.addEventListener('click', (e) => {
+            if (!isCameraActive && !photoData) {
+                fileInput.click();
+            }
+        });
+
+        videoContainer.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            videoContainer.classList.add('dragging');
+        });
+
+        videoContainer.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            videoContainer.classList.remove('dragging');
+        });
+
+        videoContainer.addEventListener('drop', (e) => {
+            e.preventDefault();
+            videoContainer.classList.remove('dragging');
+            if (e.dataTransfer.files.length > 0) {
+                processFile(e.dataTransfer.files[0]);
+            }
+        });
+
+
+        // --- API CALL FUNCTION (Multimodal) ---
+        
+        async function getDrugInfo() {
+            if (!photoData) {
+                displayError("Please capture or upload a photo first.");
+                return;
+            }
+
+            analyzeBtn.disabled = true;
+            analyzeBtn.innerHTML = '<span class="loading-spinner"></span> Analyzing...';
+            aiResponseBox.style.display = 'block';
+            analysisText.textContent = 'Processing image and generating response...';
+            
+            const userPrompt = promptInput.value || "Identify this drug and explain its mechanism of action and common uses.";
+
+            // Construct the Multimodal Payload
+            const payload = {
+                contents: [
+                    {
+                        role: "user",
+                        parts: [
+                            { text: userPrompt },
+                            {
+                                inlineData: {
+                                    mimeType: photoMimeType,
+                                    data: photoData
+                                }
+                            }
+                        ]
+                    }
+                ],
+            };
+
+            const maxRetries = 5;
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const fetchUrl = `${API_URL}?key=${apiKey}`;
+                    const apiResponse = await fetch(fetchUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!apiResponse.ok) {
+                        if (apiResponse.status === 429 && i < maxRetries - 1) {
+                            const delay = Math.pow(2, i) * 1000;
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            continue; 
+                        }
+                        throw new Error(`API request failed with status: ${apiResponse.status}`);
+                    }
+
+                    const result = await apiResponse.json();
+                    const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    if (text) {
+                        analysisText.textContent = text;
+                    } else {
+                        displayError("Could not get a text response from the AI. The image may be unclear or the model returned no content.");
+                    }
+                    analyzeBtn.disabled = false;
+                    analyzeBtn.innerHTML = 'Analyze Drug Photo';
+                    return; 
+
+                } catch (e) {
+                    console.error("Gemini API error:", e);
+                    if (i === maxRetries - 1) {
+                        displayError(`Failed to connect to AI after ${maxRetries} attempts. ${e.message}`);
+                        analyzeBtn.disabled = false;
+                        analyzeBtn.innerHTML = 'Analyze Drug Photo';
+                    }
+                }
+            }
+        }
+
+        // --- MODAL & BUTTON EVENT LISTENERS ---
+        
+        document.getElementById('chat-icon').addEventListener('click', () => {
+            modal.classList.add('active');
+            updateUI();
+        });
+
+        document.getElementById('chatbot-close').addEventListener('click', () => {
+            modal.classList.remove('active');
+            stopCamera(); 
+        });
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                document.getElementById('chatbot-close').click();
+            }
+        });
+        
+        startCameraBtn.addEventListener('click', startCamera);
+        capturePhotoBtn.addEventListener('click', captureImage);
+        clearImageBtn.addEventListener('click', clearImage);
+        analyzeBtn.addEventListener('click', getDrugInfo);
+        
+        // --- Initialization ---
+        window.addEventListener('load', () => {
+            renderAllRatings();
+            forceGifLoop();
+            
+            document.getElementById('hospital-search').addEventListener('input', filterHospitals);
+            showHospitalView(); 
+
+            specialistButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    showSpecialistList(button.getAttribute('data-specialty'));
+                });
+            });
+
+            backButton.addEventListener('click', showHospitalView);
+
+            specialistShowMoreButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    toggleSpecialistRows(button.getAttribute('data-table-id'));
+                });
+            });
+            
+            document.querySelectorAll('.specialist-table tbody tr').forEach((row, index) => {
+                if (index >= 3 && row.classList.contains('specialist-row-hidden')) {
+                    row.style.display = 'none'; 
+                }
+            });
+            document.addEventListener('DOMContentLoaded', function() {
+    // Select all rows with the class 'js-clickable-row'
+                const rows = document.querySelectorAll('.js-clickable-row');
+    
+                rows.forEach(row => {
+                    row.addEventListener('click', function(event) {
+            // Check if the click originated from a link inside the row.
+            // This prevents double-clicking if you decide to re-add links later.
+                        if (event.target.closest('a')) {
+                            return;
+                        }
+            
+            // Get the URL from the data-href attribute
+                        const url = this.getAttribute('data-href');
+            
+                        if (url) {
+                // Navigate the browser to the URL
+                            window.location.href = url;
+                        }
+                    });
+                });
+         });
+
+            // Initial UI state setup for chatbot
+            updateUI();
+        });
+    </script>
+</body>
+</html>

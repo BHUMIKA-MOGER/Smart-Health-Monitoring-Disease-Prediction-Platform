@@ -1,0 +1,16 @@
+Patient ID,Daily BP Reading (Avg),Feeling Sleepy More? (CNS Sign),New Severe Headaches?,Feeling Like Fainting? (Hypotension),New Rapid Weight Gain? (Fluid),Likely Dose Problem
+1,95/60 mmHg (Low),Yes,No,Yes,No,HIGH DOSE (Toxicity)
+2,165/100 mmHg (High),No,Yes,No,No,LOW DOSE (Failure)
+3,120/75 mmHg (Target),No,No,No,No,OPTIMAL DOSE
+4,110/70 mmHg,Yes,No,No,No,HIGH DOSE (Toxicity)
+5,150/95 mmHg (High),No,No,No,No,LOW DOSE (Failure)
+6,180/110 mmHg (Very High),No,No,No,Yes,LOW DOSE (Failure)
+7,105/65 mmHg,No,No,Yes,No,HIGH DOSE (Toxicity)
+8,125/80 mmHg (Target),No,No,No,No,OPTIMAL DOSE
+9,170/105 mmHg (High),No,Yes,No,Yes,LOW DOSE (Failure)
+10,90/55 mmHg (Very Low),Yes,No,Yes,No,HIGH DOSE (Toxicity)
+11,130/85 mmHg (Target),No,No,No,No,OPTIMAL DOSE
+12,175/100 mmHg (High),No,Yes,No,No,LOW DOSE (Failure)
+13,100/60 mmHg (Low),Yes,No,Yes,No,HIGH DOSE (Toxicity)
+14,140/90 mmHg (High),No,No,No,Yes,LOW DOSE (Failure)
+15,115/70 mmHg (Target),No,No,No,No,OPTIMAL DOSE
